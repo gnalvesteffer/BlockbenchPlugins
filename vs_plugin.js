@@ -9,7 +9,6 @@ let reExportAction
 let asset_path;
 
 
-
 Plugin.register('vs_plugin', {
     title: 'Vintage Story Format Support',
     icon: 'icon',
@@ -23,6 +22,34 @@ Plugin.register('vs_plugin', {
     onload() {
         let windProp = new Property(Face, "vector4", "windMode")
         let textureLocationProp = new Property(Texture, "string", "textureLocation")
+
+        let asset_path_setting = new Setting("asset_path", {
+            name: "Texture Asset Path",
+            type: "click",
+            click() {
+
+                let selectionDialog = new Dialog("assetPathSelect", {
+                    title: "Select Asset Path",
+                    form: {
+                        path: {
+                            label: "Path to your Vintage Story root folder",
+                            type: "folder",
+                            value: Settings.get("asset_path"),
+                        }
+
+                    },
+                    onConfirm(formResult) {
+                        console.log("Result: " + formResult.path);
+                        asset_path_setting.set(formResult.path);
+                        Settings.save()
+                    }
+                }).show();
+
+            }
+        })
+
+
+
 
         let codecVS = new Codec("codecVS", {
             name: "Vintage Story Codec",
@@ -121,20 +148,20 @@ Plugin.register('vs_plugin', {
                                 name: e.name + '_group',
                                 stepParentName: e.stepParentName,
                                 origin: e.rotationOrigin ? [e.rotationOrigin[0] + object_space_pos[0], e.rotationOrigin[1] + object_space_pos[1], e.rotationOrigin[2] + object_space_pos[2]] : object_space_pos,
-        
+
                             })
-        
+
                             group.addTo(parent).init();
                         }
                         if (e.faces && (Object.keys(e.faces).length > 0)) {
-        
+
                             let reduced_faces = {}
                             for (const direction of ['north', 'east', 'south', 'west', 'up', 'down']) {
                                 if (e.faces[direction]) {
                                     console.log(e.faces[direction].texture.substring(1));
                                     let tex = Texture.all.find((elem, i, arr) => elem.name == e.faces[direction].texture.substring(1));
                                     reduced_faces[direction] = { texture: tex, uv: e.faces[direction].uv, rotation: e.faces[direction].rotation };
-        
+
                                 }
                             }
                             let cube = new Cube({
@@ -181,7 +208,7 @@ Plugin.register('vs_plugin', {
                     texture = new Texture({
                         name: t,
                         path: path.posix.format({
-                            root: asset_path + path.sep,
+                            root: Settings.get("asset_path") + path.sep,
                             name: content.textures[t],
                             ext: '.png',
                         })
@@ -239,7 +266,7 @@ Plugin.register('vs_plugin', {
         })
         MenuBar.addAction(exportAction, 'file.export');
 
-        
+
 
         importAction = new Action('importVS', {
             name: 'Import from VS Format',
