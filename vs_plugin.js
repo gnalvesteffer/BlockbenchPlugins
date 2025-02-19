@@ -16,9 +16,7 @@ const path = require('node:path');
 let exportAction
 let importAction
 let reExportAction
-
-let asset_path;
-
+let debugAction
 
 Plugin.register('vs_plugin', {
     title: 'Vintage Story Format Support',
@@ -33,6 +31,7 @@ Plugin.register('vs_plugin', {
     onload() {
         let windProp = new Property(Face, "vector4", "windMode")
         let textureLocationProp = new Property(Texture, "string", "textureLocation")
+        let editor_backDropShapeProp = new Property(ModelProject, "string", "backDropShape")
 
         let xyz_to_zyx = function(r) {
             
@@ -122,10 +121,12 @@ Plugin.register('vs_plugin', {
                                 }
                             }
                             let converted_rotation = zyx_to_xyz(c.rotation);
+                            console.log(c.uv);
                             let e = {
                                 name: c.name,
                                 from: [c.from[0] - parent_pos[0], c.from[1] - parent_pos[1], c.from[2] - parent_pos[2]],
                                 to: [c.to[0] - parent_pos[0], c.to[1] - parent_pos[1], c.to[2] - parent_pos[2]],
+                                uv: c.uv || undefined,
                                 faces: reduced_faces,
                                 rotationX: converted_rotation[0],
                                 rotationY: converted_rotation[1],
@@ -137,6 +138,16 @@ Plugin.register('vs_plugin', {
 
 
                 }
+
+                let data = {}
+
+                if(Texture.all.length > 0 && Texture.all[0].uv_height) {
+                    data.textureHeight = Texture.all[0].uv_height;
+                }
+                if(Texture.all.length > 0 && Texture.all[0].uv_height) {
+                    data.textureWidth = Texture.all[0].uv_width;
+                }
+
                 let elements = [];
 
                 //Get all nodes on top level (children of 'root')
@@ -155,10 +166,9 @@ Plugin.register('vs_plugin', {
                     }
                 }
                 traverseExportTree(null, top_level, elements);
-                let data = {
-                    textures: {},
-                    elements: elements
-                }
+                data.elements = elements
+                data.textures = {}
+                data.editor = {}
 
                 for (let i = 0; i < Texture.all.length; i++) {
                     let t = Texture.all[i];
@@ -168,6 +178,10 @@ Plugin.register('vs_plugin', {
 
                     //path.posix.relative('C:/Users/Lukas/AppData/Roaming/Vintagestory/assets/survival/textures/', t.path).split('.').slice(0, -1).join('.');
                 }
+
+                editor_backDropShapeProp.copy(Project, data.editor);
+
+                
                 return JSON.stringify(data, null, 2)
             },
             parse(data, file_path, add) {
@@ -197,22 +211,26 @@ Plugin.register('vs_plugin', {
                                 }
                             }
                             let rotation = [0,0,0] //: xyz_to_zyx([e.rotationX || 0, e.rotationY || 0, e.rotationZ || 0]);
+                            console.log(e.uv)
                             let cube = new Cube({
                                 name: e.name,
                                 from: [e.from[0] + object_space_pos[0], e.from[1] + object_space_pos[1], e.from[2] + object_space_pos[2]],
                                 to: [e.to[0] + object_space_pos[0], e.to[1] + object_space_pos[1], e.to[2] + object_space_pos[2]],
+                                uv_offset: e.uv || undefined,
                                 origin: e.rotationOrigin ? [e.rotationOrigin[0] + object_space_pos[0], e.rotationOrigin[1] + object_space_pos[1], e.rotationOrigin[2] + object_space_pos[2]] : object_space_pos,
                                 visibility: true,
                                 shade: true,
                                 faces: reduced_faces,
                                 rotation: rotation,
                             })
+                            
                             //if (e.children) {
                                 cube.addTo(group);
                             //} else {
                             //    cube.addTo(parent);
                             //}
                             cube.init();
+                            console.log(cube)
                             for (const direction of ['north', 'east', 'south', 'west', 'up', 'down']) {
                                 if (e.faces[direction] && e.faces[direction].windMode) {
                                     windProp.merge(cube.faces[direction], e.faces[direction]);
@@ -227,8 +245,7 @@ Plugin.register('vs_plugin', {
 
                 let content = JSON.parse(data)
 
-                let texture;
-
+            
 
                 //Texture
                 for (var t in content.textures) {
@@ -237,17 +254,25 @@ Plugin.register('vs_plugin', {
                     //     name: content.textures[t],
                     //     ext: '.png',
                     // }))
-                    texture = new Texture({
+                    console.log(t);
+                    let texture = new Texture({
                         name: t,
                         path: path.posix.format({
                             root: Settings.get("asset_path") + path.sep,
                             name: content.textures[t],
                             ext: '.png',
                         })
-                    }).add().load();
+                    })
+                    texture.uv_height = content.textureHeight || undefined;
+                    texture.uv_width = content.textureWidth || undefined;
+                    texture.add().load();
+                    console.log(texture);
                     let tmp = { textureLocation: content.textures[t] };
                     textureLocationProp.merge(texture, tmp);
                 }
+
+                console.log(content.editor)
+                editor_backDropShapeProp.merge(Project, content.editor)
                 //Cubes
                 traverseImportTree(null, [0, 0, 0], content.elements)
             },
@@ -290,15 +315,15 @@ Plugin.register('vs_plugin', {
             image_editor: false, // Setting this to true removes the object outliner?!?!
             edit_mode: true,
             paint_mode: true,
-            // display_mode: false, // Only some Minecraft Skin stuff it seems
-            // animation_mode: true,
-            // pose_mode: false,
-            // animation_controllers: true,
-            // box_uv_float_size: false,
-            // java_cube_shading_properties: false,
-            // cullfaces: false, // Not sure if Vintage Story supports this
-            // // node_name_regex: null,
-            // render_sides: "front", //Seems right to me but I havent tested how VS does it
+            display_mode: false, // Only some Minecraft Skin stuff it seems
+            animation_mode: true,
+            pose_mode: false,
+            animation_controllers: true,
+            box_uv_float_size: false,
+            java_cube_shading_properties: false,
+            cullfaces: false, // Not sure if Vintage Story supports this
+            // node_name_regex: null,
+            render_sides: "front", //Seems right to me but I havent tested how VS does it
 
 
         })
@@ -330,6 +355,7 @@ Plugin.register('vs_plugin', {
                     type: 'json',
                     extensions: ['json'],
                 }, function (files) {
+                    console.log("Import!")
                     codecVS.parse(files[0].content)
                 });
             }
@@ -344,10 +370,21 @@ Plugin.register('vs_plugin', {
             }
         });
         MenuBar.addAction(reExportAction, "file");
+
+        debugAction = new Action("printDebug", {
+            name: 'Print Debug Info',
+            icon: 'icon',
+            click: function () {
+                console.log(Outliner.selected)
+            }});
+        console.log(Outliner.control_menu_group);
+        MenuBar.addAction(debugAction,"edit");
+        Outliner.control_menu_group.push(debugAction.id);
     },
     onunload() {
         exportAction.delete();
         importAction.delete();
         reExportAction.delete();
+        debugAction.delete()
     }
 });
