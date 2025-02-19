@@ -1,9 +1,20 @@
+// Copyright 2025 Darkluke1111
+
+// This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License 
+// as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+
+// This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied 
+// warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
+// You should have received a copy of the GNU General Public License along with this program. If not, see <https://www.gnu.org/licenses/>. 
+
+
+
 const { debug } = require('console');
 const path = require('node:path');
 
 let exportAction
 let importAction
-let selectAssetPathAction
 let reExportAction
 
 let asset_path;
@@ -23,6 +34,22 @@ Plugin.register('vs_plugin', {
         let windProp = new Property(Face, "vector4", "windMode")
         let textureLocationProp = new Property(Texture, "string", "textureLocation")
 
+        let xyz_to_zyx = function(r) {
+            
+            let converted = new THREE.Euler(THREE.MathUtils.degToRad(r[0]), THREE.MathUtils.degToRad(r[1]), THREE.MathUtils.degToRad(r[2]), 'XYZ').reorder('ZYX').toArray();
+            let bla = [THREE.MathUtils.radToDeg(converted[0]),THREE.MathUtils.radToDeg(converted[1]),THREE.MathUtils.radToDeg(converted[2])]
+
+            return bla;
+        }
+
+        let zyx_to_xyz = function(r) {
+            
+            let converted = new THREE.Euler(THREE.MathUtils.degToRad(r[0]), THREE.MathUtils.degToRad(r[1]), THREE.MathUtils.degToRad(r[2]), 'ZYX').reorder('XYZ').toArray();
+            let bla = [THREE.MathUtils.radToDeg(converted[0]),THREE.MathUtils.radToDeg(converted[1]),THREE.MathUtils.radToDeg(converted[2])]
+
+            return bla;
+        }
+
         let asset_path_setting = new Setting("asset_path", {
             name: "Texture Asset Path",
             type: "click",
@@ -32,14 +59,13 @@ Plugin.register('vs_plugin', {
                     title: "Select Asset Path",
                     form: {
                         path: {
-                            label: "Path to your Vintage Story root folder",
+                            label: "Path to your texture folder",
                             type: "folder",
                             value: Settings.get("asset_path"),
                         }
 
                     },
                     onConfirm(formResult) {
-                        console.log("Result: " + formResult.path);
                         asset_path_setting.set(formResult.path);
                         Settings.save()
                     }
@@ -55,6 +81,10 @@ Plugin.register('vs_plugin', {
             name: "Vintage Story Codec",
             extension: "json",
             remember: true,
+            load_filter: {
+                extensions: ["json"],
+                type: 'text',
+            },
             compile(options) {
                 let traverseExportTree = function (parent, nodes, accu) {
 
@@ -64,19 +94,23 @@ Plugin.register('vs_plugin', {
                         // Node is a Group
                         if (n.children) {
                             let g = n;
+                            let converted_rotation = zyx_to_xyz(g.rotation);
                             let e = {
                                 name: g.name,
                                 from: [g.origin[0] - parent_pos[0], g.origin[1] - parent_pos[1], g.origin[2] - parent_pos[2]],
                                 to: [g.origin[0] - parent_pos[0], g.origin[1] - parent_pos[1], g.origin[2] - parent_pos[2]],
                                 rotationOrigin: [g.origin[0] - parent_pos[0], g.origin[1] - parent_pos[1], g.origin[2] - parent_pos[2]],
+                                rotationX: converted_rotation[0],
+                                rotationY: converted_rotation[1],
+                                rotationZ: converted_rotation[2],
                                 children: []
                             }
                             accu.push(e);
                             traverseExportTree(g, g.children, e.children);
                         } else { // Node is a Cube
-                            console.log("found a cube!")
                             let c = n;
                             let reduced_faces = {}
+                            
                             for (const direction of ['north', 'east', 'south', 'west', 'up', 'down']) {
                                 if (c.faces[direction]) {
                                     reduced_faces[direction] = {};
@@ -87,14 +121,15 @@ Plugin.register('vs_plugin', {
 
                                 }
                             }
+                            let converted_rotation = zyx_to_xyz(c.rotation);
                             let e = {
                                 name: c.name,
                                 from: [c.from[0] - parent_pos[0], c.from[1] - parent_pos[1], c.from[2] - parent_pos[2]],
                                 to: [c.to[0] - parent_pos[0], c.to[1] - parent_pos[1], c.to[2] - parent_pos[2]],
                                 faces: reduced_faces,
-                                rotationX: c.rotation[0],
-                                rotationY: c.rotation[1],
-                                rotationZ: c.rotation[2],
+                                rotationX: converted_rotation[0],
+                                rotationY: converted_rotation[1],
+                                rotationZ: converted_rotation[2],
                             }
                             accu.push(e);
                         }
@@ -106,9 +141,8 @@ Plugin.register('vs_plugin', {
 
                 //Get all nodes on top level (children of 'root')
                 let top_level = [];
-                console.log(Group.all.length);
+
                 for (let i = 0; i < Group.all.length; i++) {
-                    console.log(Group.all[i]);
                     if (Group.all[i].parent === 'root') {
                         top_level.push(Group.all[i]);
 
@@ -126,8 +160,6 @@ Plugin.register('vs_plugin', {
                     elements: elements
                 }
 
-
-                //console.log(Texture.all.length);
                 for (let i = 0; i < Texture.all.length; i++) {
                     let t = Texture.all[i];
                     let tmp = {};
@@ -143,27 +175,28 @@ Plugin.register('vs_plugin', {
                     for (let i = 0; i < nodes.length; i++) {
                         let e = nodes[i];
                         let group;
-                        if (e.children) {
+                        //if (e.children) {
                             group = new Group({
                                 name: e.name + '_group',
                                 stepParentName: e.stepParentName,
                                 origin: e.rotationOrigin ? [e.rotationOrigin[0] + object_space_pos[0], e.rotationOrigin[1] + object_space_pos[1], e.rotationOrigin[2] + object_space_pos[2]] : object_space_pos,
-
+                                rotation: xyz_to_zyx([e.rotationX || 0, e.rotationY || 0, e.rotationZ || 0]),
                             })
 
                             group.addTo(parent).init();
-                        }
+                        //}
                         if (e.faces && (Object.keys(e.faces).length > 0)) {
 
                             let reduced_faces = {}
                             for (const direction of ['north', 'east', 'south', 'west', 'up', 'down']) {
                                 if (e.faces[direction]) {
-                                    console.log(e.faces[direction].texture.substring(1));
-                                    let tex = Texture.all.find((elem, i, arr) => elem.name == e.faces[direction].texture.substring(1));
+                                    let texture_name = e.faces[direction].texture ? e.faces[direction].texture.substring(1) : null;
+                                    let tex = Texture.all.find((elem, i, arr) => elem.name == texture_name);
                                     reduced_faces[direction] = { texture: tex, uv: e.faces[direction].uv, rotation: e.faces[direction].rotation };
 
                                 }
                             }
+                            let rotation = [0,0,0] //: xyz_to_zyx([e.rotationX || 0, e.rotationY || 0, e.rotationZ || 0]);
                             let cube = new Cube({
                                 name: e.name,
                                 from: [e.from[0] + object_space_pos[0], e.from[1] + object_space_pos[1], e.from[2] + object_space_pos[2]],
@@ -172,13 +205,13 @@ Plugin.register('vs_plugin', {
                                 visibility: true,
                                 shade: true,
                                 faces: reduced_faces,
-                                rotation: [e.rotationX || 0, e.rotationY || 0, e.rotationZ || 0],
+                                rotation: rotation,
                             })
-                            if (e.children) {
+                            //if (e.children) {
                                 cube.addTo(group);
-                            } else {
-                                cube.addTo(parent);
-                            }
+                            //} else {
+                            //    cube.addTo(parent);
+                            //}
                             cube.init();
                             for (const direction of ['north', 'east', 'south', 'west', 'up', 'down']) {
                                 if (e.faces[direction] && e.faces[direction].windMode) {
@@ -193,18 +226,17 @@ Plugin.register('vs_plugin', {
                 }
 
                 let content = JSON.parse(data)
-                //console.log(content);
 
                 let texture;
 
 
                 //Texture
                 for (var t in content.textures) {
-                    console.log(path.posix.format({
-                        root: asset_path,
-                        name: content.textures[t],
-                        ext: '.png',
-                    }))
+                    // console.log(path.posix.format({
+                    //     root: asset_path,
+                    //     name: content.textures[t],
+                    //     ext: '.png',
+                    // }))
                     texture = new Texture({
                         name: t,
                         path: path.posix.format({
@@ -218,36 +250,58 @@ Plugin.register('vs_plugin', {
                 }
                 //Cubes
                 traverseImportTree(null, [0, 0, 0], content.elements)
+            },
+            load(model,file, add) {
+                this.parse(model,file.path,add);
             }
         })
 
         let formatVS = new ModelFormat("formatVS", {
             name: "Vintage Story Base Format",
-            codec: codecVS
+            codec: codecVS,
+            box_uv: false,
+            optional_box_uv: false,
+            single_texture: false,
+            single_texture_default: false,
+            per_group_texture: false,
+            per_texture_uv_size: true,
+            model_identifier: false,
+            legacy_editable_file_name: false,
+            parent_model_id: false, //Use this for backdrops? false for now
+            vertex_color_ambient_occlusion: false,
+            animated_textures: false, // NOt sure if supported by VS
+            bone_rig: true,
+            centered_grid: true,
+            rotate_cubes: true,     
+            stretch_cubes: false,
+            integer_size: false,
+            meshes: false,
+            texture_meshes: false,
+            locators: false, // Not quite sure what that is
+            rotation_limit: false,
+            rotation_snap: false,
+            uv_rotation: true,
+            java_face_properties: false,
+            select_texture_for_particles: false,
+            texture_mcmeta: false,
+            bone_binding_expression: false, // Revisit for animation
+            animation_files: false,
+            texture_folder: true,
+            image_editor: false, // Setting this to true removes the object outliner?!?!
+            edit_mode: true,
+            paint_mode: true,
+            // display_mode: false, // Only some Minecraft Skin stuff it seems
+            // animation_mode: true,
+            // pose_mode: false,
+            // animation_controllers: true,
+            // box_uv_float_size: false,
+            // java_cube_shading_properties: false,
+            // cullfaces: false, // Not sure if Vintage Story supports this
+            // // node_name_regex: null,
+            // render_sides: "front", //Seems right to me but I havent tested how VS does it
+
+
         })
-
-        selectAssetPathAction = new Action("selectAssetPath", {
-            name: 'Select VS Asset Path',
-            icon: 'icon',
-            click: function () {
-
-                let selectionDialog = new Dialog("assetPathSelect", {
-                    title: "Select Asset Path",
-                    form: {
-                        path: {
-                            label: "Path to your Vintage Story root folder",
-                            type: "folder"
-                        }
-
-                    },
-                    onConfirm(formResult) {
-                        console.log("Result: " + formResult.path);
-                        asset_path = formResult.path
-                    }
-                }).show();
-            }
-        });
-        MenuBar.addAction(selectAssetPathAction, 'file');
 
 
         exportAction = new Action('exportVS', {
@@ -284,7 +338,7 @@ Plugin.register('vs_plugin', {
         MenuBar.addAction(importAction, 'file.import');
 
         reExportAction = new Action("reExport", {
-            name: 'Import from VS Format',
+            name: 'Reexport Test',
             icon: 'icon',
             click: function () {
             }
@@ -294,7 +348,6 @@ Plugin.register('vs_plugin', {
     onunload() {
         exportAction.delete();
         importAction.delete();
-        selectAssetPathAction.delete();
         reExportAction.delete();
     }
 });
