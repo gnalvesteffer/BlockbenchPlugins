@@ -83,12 +83,18 @@ module.exports = function (data, file_path, add) {
         let texture = new Texture({
             name: t,
             path: util.get_texture_location(null, content.textures[t]),
+            
         })
-
+        if(content.textureSizes[t]) {
+            console.log("found texture sizes!")
+            texture.uv_width = content.textureSizes[t][0]
+            texture.uv_height = content.textureSizes[t][1]
+        }
         texture.add().load();
         let tmp = { textureLocation: content.textures[t] };
         props.textureLocationProp.merge(texture, tmp);
     }
+
     if (content.editor) {
         props.editor_backDropShapeProp.merge(Project, content.editor)
     }

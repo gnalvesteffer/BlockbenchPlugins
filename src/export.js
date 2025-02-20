@@ -73,17 +73,21 @@ module.exports = function(options) {
         editor: {},
         textureWidth: undefined,
         textureHeight: undefined,
+        textureSizes: {},
         textures: {},
         elements: []
     }
     
 
-    // if (Texture.all.length > 0 && Texture.all[0].uv_height) {
-    //     data.textureHeight = Texture.all[0].uv_height;
-    // }
-    // if (Texture.all.length > 0 && Texture.all[0].uv_height) {
-    //     data.textureWidth = Texture.all[0].uv_width;
-    // }
+    for (var i = 0 ; i < Texture.all.length ; i++) {
+        let t = Texture.all[i]
+        console.log(t.getUVWidth())
+        if (t.getUVWidth() && t.getUVHeight()) {
+            
+            data.textureSizes[t.name] = [Texture.all[i].uv_width, Texture.all[i].uv_height];
+        }
+    }
+
 
     data.textureWidth = Project.texture_width
     data.textureHeight = Project.texture_height
