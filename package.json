@@ -1,8 +1,5 @@
 {
   "devDependencies": {
     "blockbench-types": "^4.12.1"
-  },
-  "dependencies": {
-    "json-diff": "^1.0.6"
   }
 }

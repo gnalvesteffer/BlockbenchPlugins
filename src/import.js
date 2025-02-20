@@ -1,0 +1,97 @@
+const util = require("./util.js")
+const props = require("./property.js")
+
+module.exports = function (data, file_path, add) {
+    let traverseImportTree = function (parent, object_space_pos, nodes) {
+        for (let i = 0; i < nodes.length; i++) {
+            let e = nodes[i];
+            let group;
+
+            group = new Group({
+                name: e.name + '_group',
+                //stepParentName: e.stepParentName,
+                origin: e.rotationOrigin ? [e.rotationOrigin[0] + object_space_pos[0], e.rotationOrigin[1] + object_space_pos[1], e.rotationOrigin[2] + object_space_pos[2]] : object_space_pos,
+                rotation: util.xyz_to_zyx([e.rotationX || 0, e.rotationY || 0, e.rotationZ || 0]),
+            })
+
+            if (e.stepParentName) {
+                props.stepParentProp.merge(group, e);
+            }
+
+
+            group.addTo(parent).init();
+
+            if (e.faces && (Object.keys(e.faces).length > 0)) {
+
+                let reduced_faces = {}
+                for (const direction of ['north', 'east', 'south', 'west', 'up', 'down']) {
+                    if (e.faces[direction]) {
+                        let texture_name = e.faces[direction].texture ? e.faces[direction].texture.substring(1) : null;
+                        let tex = Texture.all.find((elem, i, arr) => elem.name == texture_name);
+                        reduced_faces[direction] = { texture: tex, uv: e.faces[direction].uv, rotation: e.faces[direction].rotation };
+
+                    }
+                }
+                let rotation = [0, 0, 0] //: xyz_to_zyx([e.rotationX || 0, e.rotationY || 0, e.rotationZ || 0]);
+                let cube = new Cube({
+                    name: e.name,
+                    from: [e.from[0] + object_space_pos[0], e.from[1] + object_space_pos[1], e.from[2] + object_space_pos[2]],
+                    to: [e.to[0] + object_space_pos[0], e.to[1] + object_space_pos[1], e.to[2] + object_space_pos[2]],
+                    uv_offset: e.uv || undefined,
+                    origin: e.rotationOrigin ? [e.rotationOrigin[0] + object_space_pos[0], e.rotationOrigin[1] + object_space_pos[1], e.rotationOrigin[2] + object_space_pos[2]] : object_space_pos,
+                    visibility: true,
+                    shade: true,
+                    faces: reduced_faces,
+                    rotation: rotation,
+                })
+
+                //if (e.children) {
+                cube.addTo(group);
+                //} else {
+                //    cube.addTo(parent);
+                //}
+                cube.init();
+                for (const direction of ['north', 'east', 'south', 'west', 'up', 'down']) {
+                    if (e.faces[direction] && e.faces[direction].windMode) {
+                        props.windProp.merge(cube.faces[direction], e.faces[direction]);
+                    }
+                }
+            }
+            if (e.children) {
+                traverseImportTree(group, [e.from[0] + object_space_pos[0], e.from[1] + object_space_pos[1], e.from[2] + object_space_pos[2]], e.children);
+            }
+        }
+    }
+
+    let content = JSON.parse(data)
+
+
+
+    //Texture
+    for (var t in content.textures) {
+        // console.log(path.posix.format({
+        //     root: asset_path,
+        //     name: content.textures[t],
+        //     ext: '.png',
+        // }))
+        let texture = new Texture({
+            name: t,
+            path: util.get_texture_location(null, content.textures[t]),
+        })
+        if (content.textureHeight) {
+            texture.uv_height = content.textureHeight;
+        }
+        if (content.textureWidth) {
+            texture.uv_width = content.textureWidth;
+        }
+        texture.add().load();
+        let tmp = { textureLocation: content.textures[t] };
+        props.textureLocationProp.merge(texture, tmp);
+    }
+    if (content.editor) {
+        props.editor_backDropShapeProp.merge(Project, content.editor)
+    }
+
+    //Cubes
+    traverseImportTree(null, [0, 0, 0], content.elements)
+}
