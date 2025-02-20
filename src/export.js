@@ -114,5 +114,5 @@ module.exports = function(options) {
     if(tmp.backDropShape) {
         data.editor.backDropShape = tmp.backDropShape
     }
-    return JSON.stringify(data, null, 2)
+    return autoStringify(data)
 }
