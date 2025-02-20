@@ -134,7 +134,10 @@ Plugin.register('vs_plugin', {
                             for (const direction of ['north', 'east', 'south', 'west', 'up', 'down']) {
                                 if (c.faces[direction]) {
                                     reduced_faces[direction] = {};
-                                    reduced_faces[direction].texture = c.faces[direction].texture ? Texture.all.find((elem, _x, _y) => c.faces[direction].texture.toString() == elem.uuid.toString()).name : undefined;
+                                    if(c.faces[direction].texture) {
+                                        let texture_name = Texture.all.find((elem, _x, _y) => c.faces[direction].texture.toString() == elem.uuid.toString()).name
+                                        reduced_faces[direction].texture = "#" +  texture_name;
+                                    }
                                     reduced_faces[direction].uv = c.faces[direction].uv;
                                     reduced_faces[direction].rotation = c.faces[direction].rotation;
                                     windProp.copy(c.faces[direction], reduced_faces[direction]);
