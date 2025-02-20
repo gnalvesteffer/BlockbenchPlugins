@@ -29,24 +29,27 @@ Plugin.register('vs_plugin', {
 
 
     onload() {
+
+        //Init additional Attribute Properties
         let windProp = new Property(Face, "vector4", "windMode")
         let textureLocationProp = new Property(Texture, "string", "textureLocation")
         let editor_backDropShapeProp = new Property(ModelProject, "string", "backDropShape", {
             exposed: false,
         })
+        let stepParentProp = new Property(Group, "string", "stepParentName");
 
-        let xyz_to_zyx = function(r) {
+        let xyz_to_zyx = function (r) {
 
             let converted = new THREE.Euler(THREE.MathUtils.degToRad(r[0]), THREE.MathUtils.degToRad(r[1]), THREE.MathUtils.degToRad(r[2]), 'XYZ').reorder('ZYX').toArray();
-            let bla = [THREE.MathUtils.radToDeg(converted[0]),THREE.MathUtils.radToDeg(converted[1]),THREE.MathUtils.radToDeg(converted[2])]
+            let bla = [THREE.MathUtils.radToDeg(converted[0]), THREE.MathUtils.radToDeg(converted[1]), THREE.MathUtils.radToDeg(converted[2])]
 
             return bla;
         }
 
-        let zyx_to_xyz = function(r) {
+        let zyx_to_xyz = function (r) {
 
             let converted = new THREE.Euler(THREE.MathUtils.degToRad(r[0]), THREE.MathUtils.degToRad(r[1]), THREE.MathUtils.degToRad(r[2]), 'ZYX').reorder('XYZ').toArray();
-            let bla = [THREE.MathUtils.radToDeg(converted[0]),THREE.MathUtils.radToDeg(converted[1]),THREE.MathUtils.radToDeg(converted[2])]
+            let bla = [THREE.MathUtils.radToDeg(converted[0]), THREE.MathUtils.radToDeg(converted[1]), THREE.MathUtils.radToDeg(converted[2])]
 
             return bla;
         }
@@ -86,8 +89,8 @@ Plugin.register('vs_plugin', {
                     ext: '.png',
                 })
                 let exists = fs.existsSync(f)
-                if(exists) {
-                    
+                if (exists) {
+
                     return f;
                 }
             }
@@ -127,6 +130,14 @@ Plugin.register('vs_plugin', {
                                 rotationZ: converted_rotation[2],
                                 children: []
                             }
+
+                            //Hwy is there no better way to do this...
+                            let tmp = {}
+                            stepParentProp.copy(g,tmp);
+                            if(tmp.stepParentName) {
+                                e.stepParentName = tmp.stepParentName
+                            }
+                            
                             accu.push(e);
                             traverseExportTree(g, g.children, e.children);
                         } else { // Node is a Cube
@@ -136,9 +147,9 @@ Plugin.register('vs_plugin', {
                             for (const direction of ['north', 'east', 'south', 'west', 'up', 'down']) {
                                 if (c.faces[direction]) {
                                     reduced_faces[direction] = {};
-                                    if(c.faces[direction].texture) {
+                                    if (c.faces[direction].texture) {
                                         let texture_name = Texture.all.find((elem, _x, _y) => c.faces[direction].texture.toString() == elem.uuid.toString()).name
-                                        reduced_faces[direction].texture = "#" +  texture_name;
+                                        reduced_faces[direction].texture = "#" + texture_name;
                                     }
                                     reduced_faces[direction].uv = c.faces[direction].uv;
                                     reduced_faces[direction].rotation = c.faces[direction].rotation;
@@ -166,10 +177,10 @@ Plugin.register('vs_plugin', {
 
                 let data = {}
 
-                if(Texture.all.length > 0 && Texture.all[0].uv_height) {
+                if (Texture.all.length > 0 && Texture.all[0].uv_height) {
                     data.textureHeight = Texture.all[0].uv_height;
                 }
-                if(Texture.all.length > 0 && Texture.all[0].uv_height) {
+                if (Texture.all.length > 0 && Texture.all[0].uv_height) {
                     data.textureWidth = Texture.all[0].uv_width;
                 }
 
@@ -214,16 +225,21 @@ Plugin.register('vs_plugin', {
                     for (let i = 0; i < nodes.length; i++) {
                         let e = nodes[i];
                         let group;
-                        //if (e.children) {
+
                         group = new Group({
                             name: e.name + '_group',
-                            stepParentName: e.stepParentName,
+                            //stepParentName: e.stepParentName,
                             origin: e.rotationOrigin ? [e.rotationOrigin[0] + object_space_pos[0], e.rotationOrigin[1] + object_space_pos[1], e.rotationOrigin[2] + object_space_pos[2]] : object_space_pos,
                             rotation: xyz_to_zyx([e.rotationX || 0, e.rotationY || 0, e.rotationZ || 0]),
                         })
+                        
+                        if(e.stepParentName) {
+                            stepParentProp.merge(group, e);
+                        }
+                        
 
                         group.addTo(parent).init();
-                        //}
+
                         if (e.faces && (Object.keys(e.faces).length > 0)) {
 
                             let reduced_faces = {}
@@ -268,7 +284,7 @@ Plugin.register('vs_plugin', {
 
                 let content = JSON.parse(data)
 
-            
+
 
                 //Texture
                 for (var t in content.textures) {
@@ -281,25 +297,25 @@ Plugin.register('vs_plugin', {
                         name: t,
                         path: get_texture_location(null, content.textures[t]),
                     })
-                    if(content.textureHeight) {
+                    if (content.textureHeight) {
                         texture.uv_height = content.textureHeight;
                     }
-                    if(content.textureWidth) {
+                    if (content.textureWidth) {
                         texture.uv_width = content.textureWidth;
                     }
                     texture.add().load();
                     let tmp = { textureLocation: content.textures[t] };
                     textureLocationProp.merge(texture, tmp);
                 }
-                if(content.editor) {
+                if (content.editor) {
                     editor_backDropShapeProp.merge(Project, content.editor)
                 }
-                
+
                 //Cubes
                 traverseImportTree(null, [0, 0, 0], content.elements)
             },
-            load(model,file, add) {
-                this.parse(model,file.path,add);
+            load(model, file, add) {
+                this.parse(model, file.path, add);
             }
         })
 
