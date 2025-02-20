@@ -49,23 +49,25 @@ Plugin.register('vs_plugin', {
             return bla;
         }
 
-        let asset_path_setting = new Setting("asset_path", {
-            name: "Texture Asset Path",
+        let game_path_setting = new Setting("game_path", {
+            name: "Game Path",
+            description: "The path to your Vintage Story game folder. This is the folder that contains the assets, mods and lib folders.",
             type: "click",
+            value: Settings.get("asset_path") || process.env.VINTAGE_STORY || null,
             click() {
 
-                let selectionDialog = new Dialog("assetPathSelect", {
-                    title: "Select Asset Path",
+                new Dialog("gamePathSelect", {
+                    title: "Select Game Path",
                     form: {
                         path: {
                             label: "Path to your texture folder",
                             type: "folder",
-                            value: Settings.get("asset_path"),
+                            value: Settings.get("game_path") || process.env.VINTAGE_STORY || null,
                         }
 
                     },
                     onConfirm(formResult) {
-                        asset_path_setting.set(formResult.path);
+                        game_path_setting.set(formResult.path);
                         Settings.save()
                     }
                 }).show();
@@ -73,7 +75,26 @@ Plugin.register('vs_plugin', {
             }
         })
 
+        let get_texture_location = function (domain, rel_path) {
 
+            for (let base_mod_path of ["creative", "game", "survival"]) {
+                let f = path.posix.format({
+                    root: Settings.get("game_path") + path.sep + "assets" + path.sep + base_mod_path + path.sep + "textures" + path.sep,
+                    name: rel_path,
+                    ext: '.png',
+                })
+                let exists = fs.existsSync(f)
+                if(exists) {
+                    
+                    return f;
+                }
+            }
+            Blockbench.showMessageBox({
+                title: "Texture file not found",
+                message: `Unable to find texture ${rel_path} in the base game texture locations.`
+            })
+            return ""
+        }
 
 
         let codecVS = new Codec("codecVS", {
@@ -121,7 +142,6 @@ Plugin.register('vs_plugin', {
                                 }
                             }
                             let converted_rotation = zyx_to_xyz(c.rotation);
-                            console.log(c.uv);
                             let e = {
                                 name: c.name,
                                 from: [c.from[0] - parent_pos[0], c.from[1] - parent_pos[1], c.from[2] - parent_pos[2]],
@@ -210,8 +230,7 @@ Plugin.register('vs_plugin', {
 
                                 }
                             }
-                            let rotation = [0,0,0] //: xyz_to_zyx([e.rotationX || 0, e.rotationY || 0, e.rotationZ || 0]);
-                            console.log(e.uv)
+                            let rotation = [0, 0, 0] //: xyz_to_zyx([e.rotationX || 0, e.rotationY || 0, e.rotationZ || 0]);
                             let cube = new Cube({
                                 name: e.name,
                                 from: [e.from[0] + object_space_pos[0], e.from[1] + object_space_pos[1], e.from[2] + object_space_pos[2]],
@@ -230,7 +249,6 @@ Plugin.register('vs_plugin', {
                             //    cube.addTo(parent);
                             //}
                             cube.init();
-                            console.log(cube)
                             for (const direction of ['north', 'east', 'south', 'west', 'up', 'down']) {
                                 if (e.faces[direction] && e.faces[direction].windMode) {
                                     windProp.merge(cube.faces[direction], e.faces[direction]);
@@ -254,19 +272,17 @@ Plugin.register('vs_plugin', {
                     //     name: content.textures[t],
                     //     ext: '.png',
                     // }))
-                    console.log(t);
                     let texture = new Texture({
                         name: t,
-                        path: path.posix.format({
-                            root: Settings.get("asset_path") + path.sep,
-                            name: content.textures[t],
-                            ext: '.png',
+                        path: get_texture_location(null, content.textures[t]),
                         })
-                    })
-                    texture.uv_height = content.textureHeight || undefined;
-                    texture.uv_width = content.textureWidth || undefined;
+                    if(content.textureHeight) {
+                        texture.uv_height = content.textureHeight;
+                    }
+                    if(content.textureWidth) {
+                        texture.uv_width = content.textureWidth;
+                    }
                     texture.add().load();
-                    console.log(texture);
                     let tmp = { textureLocation: content.textures[t] };
                     textureLocationProp.merge(texture, tmp);
                 }
@@ -355,7 +371,6 @@ Plugin.register('vs_plugin', {
                     type: 'json',
                     extensions: ['json'],
                 }, function (files) {
-                    console.log("Import!")
                     codecVS.parse(files[0].content)
                 });
             }
@@ -376,9 +391,9 @@ Plugin.register('vs_plugin', {
             icon: 'icon',
             click: function () {
                 console.log(Outliner.selected)
-            }});
-        console.log(Outliner.control_menu_group);
-        MenuBar.addAction(debugAction,"edit");
+            }
+        });
+        MenuBar.addAction(debugAction, "edit");
         Outliner.control_menu_group.push(debugAction.id);
     },
     onunload() {
