@@ -34,7 +34,7 @@ Plugin.register('vs_plugin', {
         let editor_backDropShapeProp = new Property(ModelProject, "string", "backDropShape")
 
         let xyz_to_zyx = function(r) {
-            
+
             let converted = new THREE.Euler(THREE.MathUtils.degToRad(r[0]), THREE.MathUtils.degToRad(r[1]), THREE.MathUtils.degToRad(r[2]), 'XYZ').reorder('ZYX').toArray();
             let bla = [THREE.MathUtils.radToDeg(converted[0]),THREE.MathUtils.radToDeg(converted[1]),THREE.MathUtils.radToDeg(converted[2])]
 
@@ -42,7 +42,7 @@ Plugin.register('vs_plugin', {
         }
 
         let zyx_to_xyz = function(r) {
-            
+
             let converted = new THREE.Euler(THREE.MathUtils.degToRad(r[0]), THREE.MathUtils.degToRad(r[1]), THREE.MathUtils.degToRad(r[2]), 'ZYX').reorder('XYZ').toArray();
             let bla = [THREE.MathUtils.radToDeg(converted[0]),THREE.MathUtils.radToDeg(converted[1]),THREE.MathUtils.radToDeg(converted[2])]
 
@@ -130,7 +130,7 @@ Plugin.register('vs_plugin', {
                         } else { // Node is a Cube
                             let c = n;
                             let reduced_faces = {}
-                            
+
                             for (const direction of ['north', 'east', 'south', 'west', 'up', 'down']) {
                                 if (c.faces[direction]) {
                                     reduced_faces[direction] = {};
@@ -201,7 +201,7 @@ Plugin.register('vs_plugin', {
 
                 editor_backDropShapeProp.copy(Project, data.editor);
 
-                
+
                 return JSON.stringify(data, null, 2)
             },
             parse(data, file_path, add) {
@@ -210,14 +210,14 @@ Plugin.register('vs_plugin', {
                         let e = nodes[i];
                         let group;
                         //if (e.children) {
-                            group = new Group({
-                                name: e.name + '_group',
-                                stepParentName: e.stepParentName,
-                                origin: e.rotationOrigin ? [e.rotationOrigin[0] + object_space_pos[0], e.rotationOrigin[1] + object_space_pos[1], e.rotationOrigin[2] + object_space_pos[2]] : object_space_pos,
-                                rotation: xyz_to_zyx([e.rotationX || 0, e.rotationY || 0, e.rotationZ || 0]),
-                            })
+                        group = new Group({
+                            name: e.name + '_group',
+                            stepParentName: e.stepParentName,
+                            origin: e.rotationOrigin ? [e.rotationOrigin[0] + object_space_pos[0], e.rotationOrigin[1] + object_space_pos[1], e.rotationOrigin[2] + object_space_pos[2]] : object_space_pos,
+                            rotation: xyz_to_zyx([e.rotationX || 0, e.rotationY || 0, e.rotationZ || 0]),
+                        })
 
-                            group.addTo(parent).init();
+                        group.addTo(parent).init();
                         //}
                         if (e.faces && (Object.keys(e.faces).length > 0)) {
 
@@ -242,9 +242,9 @@ Plugin.register('vs_plugin', {
                                 faces: reduced_faces,
                                 rotation: rotation,
                             })
-                            
+
                             //if (e.children) {
-                                cube.addTo(group);
+                            cube.addTo(group);
                             //} else {
                             //    cube.addTo(parent);
                             //}
@@ -275,7 +275,7 @@ Plugin.register('vs_plugin', {
                     let texture = new Texture({
                         name: t,
                         path: get_texture_location(null, content.textures[t]),
-                        })
+                    })
                     if(content.textureHeight) {
                         texture.uv_height = content.textureHeight;
                     }
@@ -286,9 +286,10 @@ Plugin.register('vs_plugin', {
                     let tmp = { textureLocation: content.textures[t] };
                     textureLocationProp.merge(texture, tmp);
                 }
-
-                console.log(content.editor)
-                editor_backDropShapeProp.merge(Project, content.editor)
+                if(content.editor) {
+                    editor_backDropShapeProp.merge(Project, content.editor)
+                }
+                
                 //Cubes
                 traverseImportTree(null, [0, 0, 0], content.elements)
             },
@@ -313,7 +314,7 @@ Plugin.register('vs_plugin', {
             animated_textures: false, // NOt sure if supported by VS
             bone_rig: true,
             centered_grid: true,
-            rotate_cubes: true,     
+            rotate_cubes: true,
             stretch_cubes: false,
             integer_size: false,
             meshes: false,
