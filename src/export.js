@@ -48,7 +48,7 @@ module.exports = function(options) {
                             reduced_faces[direction].rotation = c.faces[direction].rotation;
                         }
                         props.windProp.copy(c.faces[direction], reduced_faces[direction]);
-
+                        reduced_faces[direction] = new oneLiner(reduced_faces[direction])
                     }
                 }
                 let converted_rotation = util.zyx_to_xyz(c.rotation);
