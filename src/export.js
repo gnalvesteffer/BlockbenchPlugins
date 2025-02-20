@@ -16,9 +16,9 @@ module.exports = function(options) {
                     from: [g.origin[0] - parent_pos[0], g.origin[1] - parent_pos[1], g.origin[2] - parent_pos[2]],
                     to: [g.origin[0] - parent_pos[0], g.origin[1] - parent_pos[1], g.origin[2] - parent_pos[2]],
                     rotationOrigin: [g.origin[0] - parent_pos[0], g.origin[1] - parent_pos[1], g.origin[2] - parent_pos[2]],
-                    rotationX: converted_rotation[0],
-                    rotationY: converted_rotation[1],
-                    rotationZ: converted_rotation[2],
+                    ... (converted_rotation[0] != 0 ) && {rotationX: converted_rotation[0]},
+                    ... (converted_rotation[1] != 0 ) && {rotationY: converted_rotation[1]},
+                    ... (converted_rotation[2] != 0 ) && {rotationZ: converted_rotation[2]},
                     children: []
                 }
 
@@ -44,7 +44,9 @@ module.exports = function(options) {
                             reduced_faces[direction].texture = "#" + texture_name;
                         }
                         reduced_faces[direction].uv = c.faces[direction].uv;
-                        reduced_faces[direction].rotation = c.faces[direction].rotation;
+                        if(c.faces[direction].rotation != 0) {
+                            reduced_faces[direction].rotation = c.faces[direction].rotation;
+                        }
                         props.windProp.copy(c.faces[direction], reduced_faces[direction]);
 
                     }
@@ -56,9 +58,9 @@ module.exports = function(options) {
                     to: [c.to[0] - parent_pos[0], c.to[1] - parent_pos[1], c.to[2] - parent_pos[2]],
                     uv: c.uv || undefined,
                     faces: reduced_faces,
-                    rotationX: converted_rotation[0],
-                    rotationY: converted_rotation[1],
-                    rotationZ: converted_rotation[2],
+                    ... (converted_rotation[0] != 0 ) && {rotationX: converted_rotation[0]},
+                    ... (converted_rotation[1] != 0 ) && {rotationY: converted_rotation[1]},
+                    ... (converted_rotation[2] != 0 ) && {rotationZ: converted_rotation[2]},
                 }
                 accu.push(e);
             }
@@ -71,6 +73,7 @@ module.exports = function(options) {
         editor: {},
         textureWidth: undefined,
         textureHeight: undefined,
+        textures: {},
         elements: []
     }
     
