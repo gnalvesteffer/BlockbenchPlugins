@@ -85,8 +85,7 @@ module.exports = function (data, file_path, add) {
             path: util.get_texture_location(null, content.textures[t]),
             
         })
-        if(content.textureSizes[t]) {
-            console.log("found texture sizes!")
+        if(content.textureSizes && content.textureSizes[t]) {
             texture.uv_width = content.textureSizes[t][0]
             texture.uv_height = content.textureSizes[t][1]
         }
