@@ -65,6 +65,12 @@ module.exports = function (data, file_path, add) {
 
     let content = JSON.parse(data)
 
+    if (content.textureHeight) {
+        Project.texture_height = content.textureHeight;
+    }
+    if (content.textureWidth) {
+        Project.texture_width = content.textureWidth;
+    }
 
 
     //Texture
@@ -78,12 +84,7 @@ module.exports = function (data, file_path, add) {
             name: t,
             path: util.get_texture_location(null, content.textures[t]),
         })
-        if (content.textureHeight) {
-            texture.uv_height = content.textureHeight;
-        }
-        if (content.textureWidth) {
-            texture.uv_width = content.textureWidth;
-        }
+
         texture.add().load();
         let tmp = { textureLocation: content.textures[t] };
         props.textureLocationProp.merge(texture, tmp);
@@ -94,4 +95,5 @@ module.exports = function (data, file_path, add) {
 
     //Cubes
     traverseImportTree(null, [0, 0, 0], content.elements)
+
 }

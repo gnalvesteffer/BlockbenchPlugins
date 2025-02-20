@@ -78,12 +78,15 @@ module.exports = function(options) {
     }
     
 
-    if (Texture.all.length > 0 && Texture.all[0].uv_height) {
-        data.textureHeight = Texture.all[0].uv_height;
-    }
-    if (Texture.all.length > 0 && Texture.all[0].uv_height) {
-        data.textureWidth = Texture.all[0].uv_width;
-    }
+    // if (Texture.all.length > 0 && Texture.all[0].uv_height) {
+    //     data.textureHeight = Texture.all[0].uv_height;
+    // }
+    // if (Texture.all.length > 0 && Texture.all[0].uv_height) {
+    //     data.textureWidth = Texture.all[0].uv_width;
+    // }
+
+    data.textureWidth = Project.texture_width
+    data.textureHeight = Project.texture_height
 
     //Get all nodes on top level (children of 'root')
     let top_level = [];
