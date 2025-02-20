@@ -12,6 +12,7 @@
 
 const { debug } = require('console');
 const path = require('node:path');
+var jsonDiff = require("json-diff");
 
 let exportAction
 let importAction
@@ -29,7 +30,7 @@ Plugin.register('vs_plugin', {
 
 
     onload() {
-
+        console.log(jsonDiff.diffString({ foo: 'bar' }, { foo: 'baz' }));
         //Init additional Attribute Properties
         let windProp = new Property(Face, "vector4", "windMode")
         let textureLocationProp = new Property(Texture, "string", "textureLocation")
@@ -137,7 +138,7 @@ Plugin.register('vs_plugin', {
                             if(tmp.stepParentName) {
                                 e.stepParentName = tmp.stepParentName
                             }
-                            
+
                             accu.push(e);
                             traverseExportTree(g, g.children, e.children);
                         } else { // Node is a Cube
