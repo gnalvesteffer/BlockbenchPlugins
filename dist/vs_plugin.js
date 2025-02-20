@@ -4334,7 +4334,7 @@ module.exports = function(options) {
                     children: []
                 }
 
-                //Hwy is there no better way to do this...
+                //Why is there no better way to do this...
                 let tmp = {}
                 props.stepParentProp.copy(g,tmp);
                 if(tmp.stepParentName) {
@@ -4379,7 +4379,13 @@ module.exports = function(options) {
 
     }
 
-    let data = {}
+    let data = {
+        editor: {},
+        textureWidth: undefined,
+        textureHeight: undefined,
+        elements: []
+    }
+    
 
     if (Texture.all.length > 0 && Texture.all[0].uv_height) {
         data.textureHeight = Texture.all[0].uv_height;
@@ -4387,8 +4393,6 @@ module.exports = function(options) {
     if (Texture.all.length > 0 && Texture.all[0].uv_height) {
         data.textureWidth = Texture.all[0].uv_width;
     }
-
-    let elements = [];
 
     //Get all nodes on top level (children of 'root')
     let top_level = [];
@@ -4405,10 +4409,8 @@ module.exports = function(options) {
 
         }
     }
-    traverseExportTree(null, top_level, elements);
-    data.elements = elements
-    data.textures = {}
-    data.editor = {}
+    traverseExportTree(null, top_level, data.elements);
+
 
     for (let i = 0; i < Texture.all.length; i++) {
         let t = Texture.all[i];
@@ -4419,9 +4421,11 @@ module.exports = function(options) {
         //path.posix.relative('C:/Users/Lukas/AppData/Roaming/Vintagestory/assets/survival/textures/', t.path).split('.').slice(0, -1).join('.');
     }
 
-    props.editor_backDropShapeProp.copy(Project, data.editor);
-
-
+    let tmp = {}
+    props.editor_backDropShapeProp.copy(Project, tmp);
+    if(tmp.backDropShape) {
+        data.editor.backDropShape = tmp.backDropShape
+    }
     return JSON.stringify(data, null, 2)
 }
 },{"./property.js":69,"./util.js":70}],68:[function(require,module,exports){
@@ -4612,6 +4616,7 @@ Plugin.register('vs_plugin', {
             name: "Game Path",
             description: "The path to your Vintage Story game folder. This is the folder that contains the assets, mods and lib folders.",
             type: "click",
+            icon: "fa-folder-plus",
             value: Settings.get("asset_path") || process.env.VINTAGE_STORY || null,
             click() {
 
@@ -4659,6 +4664,7 @@ Plugin.register('vs_plugin', {
         let formatVS = new ModelFormat("formatVS", {
             name: "Vintage Story Base Format",
             codec: codecVS,
+            icon: "fa-cookie-bite",
             box_uv: false,
             optional_box_uv: false,
             single_texture: false,
@@ -4706,7 +4712,7 @@ Plugin.register('vs_plugin', {
 
         exportAction = new Action('exportVS', {
             name: 'Export into VS Format',
-            icon: 'icon',
+            icon: 'fa-cookie-bite',
             click: function () {
 
                 Blockbench.export({
@@ -4724,7 +4730,7 @@ Plugin.register('vs_plugin', {
 
         importAction = new Action('importVS', {
             name: 'Import from VS Format',
-            icon: 'icon',
+            icon: 'fa-cookie-bite',
             click: function () {
                 Blockbench.import({
                     type: 'json',
@@ -4739,7 +4745,7 @@ Plugin.register('vs_plugin', {
 
         reExportAction = new Action("reExport", {
             name: 'Reexport Test',
-            icon: 'icon',
+            icon: 'fa-flask-vial',
             click: function () {
                 new Dialog("folder_select", {
                     title: "Select Folder",

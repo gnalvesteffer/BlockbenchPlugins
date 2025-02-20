@@ -22,7 +22,7 @@ module.exports = function(options) {
                     children: []
                 }
 
-                //Hwy is there no better way to do this...
+                //Why is there no better way to do this...
                 let tmp = {}
                 props.stepParentProp.copy(g,tmp);
                 if(tmp.stepParentName) {
@@ -67,7 +67,13 @@ module.exports = function(options) {
 
     }
 
-    let data = {}
+    let data = {
+        editor: {},
+        textureWidth: undefined,
+        textureHeight: undefined,
+        elements: []
+    }
+    
 
     if (Texture.all.length > 0 && Texture.all[0].uv_height) {
         data.textureHeight = Texture.all[0].uv_height;
@@ -75,8 +81,6 @@ module.exports = function(options) {
     if (Texture.all.length > 0 && Texture.all[0].uv_height) {
         data.textureWidth = Texture.all[0].uv_width;
     }
-
-    let elements = [];
 
     //Get all nodes on top level (children of 'root')
     let top_level = [];
@@ -93,10 +97,8 @@ module.exports = function(options) {
 
         }
     }
-    traverseExportTree(null, top_level, elements);
-    data.elements = elements
-    data.textures = {}
-    data.editor = {}
+    traverseExportTree(null, top_level, data.elements);
+
 
     for (let i = 0; i < Texture.all.length; i++) {
         let t = Texture.all[i];
@@ -107,8 +109,10 @@ module.exports = function(options) {
         //path.posix.relative('C:/Users/Lukas/AppData/Roaming/Vintagestory/assets/survival/textures/', t.path).split('.').slice(0, -1).join('.');
     }
 
-    props.editor_backDropShapeProp.copy(Project, data.editor);
-
-
+    let tmp = {}
+    props.editor_backDropShapeProp.copy(Project, tmp);
+    if(tmp.backDropShape) {
+        data.editor.backDropShape = tmp.backDropShape
+    }
     return JSON.stringify(data, null, 2)
 }

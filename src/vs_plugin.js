@@ -31,6 +31,7 @@ Plugin.register('vs_plugin', {
             name: "Game Path",
             description: "The path to your Vintage Story game folder. This is the folder that contains the assets, mods and lib folders.",
             type: "click",
+            icon: "fa-folder-plus",
             value: Settings.get("asset_path") || process.env.VINTAGE_STORY || null,
             click() {
 
@@ -78,6 +79,7 @@ Plugin.register('vs_plugin', {
         let formatVS = new ModelFormat("formatVS", {
             name: "Vintage Story Base Format",
             codec: codecVS,
+            icon: "fa-cookie-bite",
             box_uv: false,
             optional_box_uv: false,
             single_texture: false,
@@ -125,7 +127,7 @@ Plugin.register('vs_plugin', {
 
         exportAction = new Action('exportVS', {
             name: 'Export into VS Format',
-            icon: 'icon',
+            icon: 'fa-cookie-bite',
             click: function () {
 
                 Blockbench.export({
@@ -143,7 +145,7 @@ Plugin.register('vs_plugin', {
 
         importAction = new Action('importVS', {
             name: 'Import from VS Format',
-            icon: 'icon',
+            icon: 'fa-cookie-bite',
             click: function () {
                 Blockbench.import({
                     type: 'json',
@@ -158,7 +160,7 @@ Plugin.register('vs_plugin', {
 
         reExportAction = new Action("reExport", {
             name: 'Reexport Test',
-            icon: 'icon',
+            icon: 'fa-flask-vial',
             click: function () {
                 new Dialog("folder_select", {
                     title: "Select Folder",
