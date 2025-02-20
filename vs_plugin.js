@@ -31,7 +31,9 @@ Plugin.register('vs_plugin', {
     onload() {
         let windProp = new Property(Face, "vector4", "windMode")
         let textureLocationProp = new Property(Texture, "string", "textureLocation")
-        let editor_backDropShapeProp = new Property(ModelProject, "string", "backDropShape")
+        let editor_backDropShapeProp = new Property(ModelProject, "string", "backDropShape", {
+            exposed: false,
+        })
 
         let xyz_to_zyx = function(r) {
 
