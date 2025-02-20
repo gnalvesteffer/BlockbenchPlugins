@@ -2,6 +2,7 @@ const util = require("./util.js")
 const props = require("./property.js")
 
 module.exports = function (data, file_path, add) {
+
     let traverseImportTree = function (parent, object_space_pos, nodes) {
         for (let i = 0; i < nodes.length; i++) {
             let e = nodes[i];
@@ -63,7 +64,7 @@ module.exports = function (data, file_path, add) {
         }
     }
 
-    let content = JSON.parse(data)
+    let content = autoParseJSON(data)
 
     if (content.textureHeight) {
         Project.texture_height = content.textureHeight;
@@ -94,9 +95,15 @@ module.exports = function (data, file_path, add) {
         props.textureLocationProp.merge(texture, tmp);
     }
 
-    if (content.editor) {
+    if (content.editor && content.editor.backDropShape) {
+
         props.editor_backDropShapeProp.merge(Project, content.editor)
+        
+        
+
     }
+
+
 
     //Cubes
     traverseImportTree(null, [0, 0, 0], content.elements)

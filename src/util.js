@@ -30,10 +30,24 @@ let get_texture_location = function (domain, rel_path) {
             return f;
         }
     }
-    // Blockbench.showMessageBox({
-    //     title: "Texture file not found",
-    //     message: `Unable to find texture ${rel_path} in the base game texture locations.`
-    // })
+    return ""
+}
+
+let get_shape_location = function (domain, rel_path) {
+
+    for (let base_mod_path of ["creative", "game", "survival"]) {
+        let f = path.posix.format({
+            root: Settings.get("game_path") + path.sep + "assets" + path.sep + base_mod_path + path.sep + "shapes" + path.sep,
+            name: rel_path,
+            ext: '.json',
+        })
+        console.log(f)
+        let exists = fs.existsSync(f)
+        if (exists) {
+
+            return f;
+        }
+    }
     return ""
 }
 
@@ -41,4 +55,5 @@ module.exports = {
     xyz_to_zyx: xyz_to_zyx,
     zyx_to_xyz: zyx_to_xyz,
     get_texture_location: get_texture_location,
+    get_shape_location: get_shape_location,
 }
