@@ -1,12 +1,13 @@
 const util = require("./util.js")
 const props = require("./property.js")
 
-module.exports = function (data, file_path, add) {
+module.exports = function (data, locked) {
 
     let traverseImportTree = function (parent, object_space_pos, nodes) {
+        let group = {}
         for (let i = 0; i < nodes.length; i++) {
             let e = nodes[i];
-            let group;
+            
 
             group = new Group({
                 name: e.name + '_group',
@@ -21,6 +22,7 @@ module.exports = function (data, file_path, add) {
 
 
             group.addTo(parent).init();
+            //group.extend({locked: locked})
 
             if (e.faces && (Object.keys(e.faces).length > 0)) {
 
@@ -61,7 +63,9 @@ module.exports = function (data, file_path, add) {
             if (e.children) {
                 traverseImportTree(group, [e.from[0] + object_space_pos[0], e.from[1] + object_space_pos[1], e.from[2] + object_space_pos[2]], e.children);
             }
+            
         }
+        return group
     }
 
     let content = autoParseJSON(data)
@@ -106,6 +110,7 @@ module.exports = function (data, file_path, add) {
 
 
     //Cubes
-    traverseImportTree(null, [0, 0, 0], content.elements)
+    let group = traverseImportTree(null, [0, 0, 0], content.elements)
+    //group.extend({locked: locked});
 
 }

@@ -51,6 +51,23 @@ let get_shape_location = function (domain, rel_path) {
     return ""
 }
 
+let visit_tree = function(tree, visitor) {
+    let visit_tree_rec = (parent,tree, visitor) => {
+        if(is_group(tree)) {
+            visitor.visit_group(tree, parent)
+            for(var child of tree.children) {
+                visit_tree_rec(tree, child, visitor)
+            }
+        } else {
+            visitor.visit_cube(tree, parent)
+        }
+    }
+    
+    visit_tree_rec(null, tree, visitor)
+}
+
+let is_group = (x) => x.children
+
 module.exports = {
     xyz_to_zyx: xyz_to_zyx,
     zyx_to_xyz: zyx_to_xyz,

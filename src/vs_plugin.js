@@ -6,6 +6,7 @@ const im = require("./import.js");
 const format_definition = require("./format_definition.js");
 const { editor_backDropShapeProp } = require('./property.js');
 const util = require('./util.js');
+const props = require('./property.js');
 
 
 
@@ -65,21 +66,37 @@ Plugin.register('vs_plugin', {
                 return ex(options)
             },
             parse(data, file_path, add) {
-                im(data, file_path, add)
-
-                let backDrop = {}
-                editor_backDropShapeProp.copy(Project, backDrop)
-                console.log(backDrop.backDropShape)
-                if (backDrop.backDropShape) {
-                    Blockbench.read(util.get_shape_location(null, backDrop.backDropShape), {
-                        readtype: "text", errorbox: false
-                    }, (files) => {
-                        im(files[0].content, files[0].path, true)
-                    })
-
-                }
+                im(data, file_path, false)
+                loadBackDropShape()
+                resolveStepparentTransforms()
             },
         })
+
+        function loadBackDropShape() {
+            let backDrop = {}
+            editor_backDropShapeProp.copy(Project, backDrop)
+            console.log(backDrop.backDropShape)
+            if (backDrop.backDropShape) {
+                Blockbench.read(util.get_shape_location(null, backDrop.backDropShape), {
+                    readtype: "text", errorbox: false
+                }, (files) => {
+                    im(files[0].content, files[0].path, true)
+                })
+
+            }
+        }
+
+        function resolveStepparentTransforms() {
+            for (var g of Group.all) {
+                let p = {}
+                props.stepParentProp.copy(g, p)
+                if(p.stepParentName) {
+                    let sp = Group.all.find(g => g.name === (p.stepParentName + "_group")).children[0];
+                    console.log(sp)
+                    g.children[0].moveVector(sp.from,0,true)
+                }
+            }
+        }
 
         let formatVS = format_definition(codecVS)
         codecVS.format = formatVS
