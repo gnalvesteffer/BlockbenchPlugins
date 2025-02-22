@@ -1,11 +1,13 @@
 const util = require("./util.js")
 const props = require("./property.js")
 
-module.exports = function (data, file_path, add) {
+module.exports = function (data, locked) {
+
     let traverseImportTree = function (parent, object_space_pos, nodes) {
+        let group = {}
         for (let i = 0; i < nodes.length; i++) {
             let e = nodes[i];
-            let group;
+            
 
             group = new Group({
                 name: e.name + '_group',
@@ -20,6 +22,7 @@ module.exports = function (data, file_path, add) {
 
 
             group.addTo(parent).init();
+            //group.extend({locked: locked})
 
             if (e.faces && (Object.keys(e.faces).length > 0)) {
 
@@ -32,7 +35,7 @@ module.exports = function (data, file_path, add) {
 
                     }
                 }
-                let rotation = [0, 0, 0] //: xyz_to_zyx([e.rotationX || 0, e.rotationY || 0, e.rotationZ || 0]);
+                let rotation = [0, 0, 0] 
                 let cube = new Cube({
                     name: e.name,
                     from: [e.from[0] + object_space_pos[0], e.from[1] + object_space_pos[1], e.from[2] + object_space_pos[2]],
@@ -60,10 +63,12 @@ module.exports = function (data, file_path, add) {
             if (e.children) {
                 traverseImportTree(group, [e.from[0] + object_space_pos[0], e.from[1] + object_space_pos[1], e.from[2] + object_space_pos[2]], e.children);
             }
+            
         }
+        return group
     }
 
-    let content = JSON.parse(data)
+    let content = autoParseJSON(data)
 
     if (content.textureHeight) {
         Project.texture_height = content.textureHeight;
@@ -94,11 +99,18 @@ module.exports = function (data, file_path, add) {
         props.textureLocationProp.merge(texture, tmp);
     }
 
-    if (content.editor) {
+    if (content.editor && content.editor.backDropShape) {
+
         props.editor_backDropShapeProp.merge(Project, content.editor)
+        
+        
+
     }
 
+
+
     //Cubes
-    traverseImportTree(null, [0, 0, 0], content.elements)
+    let group = traverseImportTree(null, [0, 0, 0], content.elements)
+    //group.extend({locked: locked});
 
 }

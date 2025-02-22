@@ -4,6 +4,9 @@ const path = require('node:path');
 const ex = require("./export.js");
 const im = require("./import.js");
 const format_definition = require("./format_definition.js");
+const { editor_backDropShapeProp } = require('./property.js');
+const util = require('./util.js');
+const props = require('./property.js');
 
 
 
@@ -63,14 +66,45 @@ Plugin.register('vs_plugin', {
                 return ex(options)
             },
             parse(data, file_path, add) {
-                im(data, file_path, add)
+                im(data, file_path, false)
+                loadBackDropShape()
+                resolveStepparentTransforms()
             },
-            load(model, file, add) {
-                this.parse(model, file.path, add);
-            }
         })
 
+        function loadBackDropShape() {
+            let backDrop = {}
+            editor_backDropShapeProp.copy(Project, backDrop)
+            console.log(backDrop.backDropShape)
+            if (backDrop.backDropShape) {
+                Blockbench.read(util.get_shape_location(null, backDrop.backDropShape), {
+                    readtype: "text", errorbox: false
+                }, (files) => {
+                    im(files[0].content, files[0].path, true)
+                })
+
+            }
+        }
+
+
+
+        function resolveStepparentTransforms() {
+            for (var g of Group.all) {
+                let p = {}
+                props.stepParentProp.copy(g, p)
+                if(p.stepParentName) {
+                    let spg = Group.all.find(g => g.name === (p.stepParentName + "_group"))
+                    let sp = spg.children[0]
+                    console.log(sp)
+                    
+                    util.setParent(g,sp)
+                    g.addTo(spg);
+                }
+            }
+        }
+
         let formatVS = format_definition(codecVS)
+        codecVS.format = formatVS
 
 
         exportAction = new Action('exportVS', {
@@ -123,19 +157,24 @@ Plugin.register('vs_plugin', {
                         let test_folder = form_result.select_folder;
 
                         let test_files = fs.readdirSync(test_folder);
-                        for(var test_file of test_files) {
-                            if(!test_file.includes("reexport")) {
-                                let project = new ModelProject({format: formatVS})
+                        for (var test_file of test_files) {
+                            if (!test_file.includes("reexport")) {
+                                let project = new ModelProject({ format: formatVS })
                                 project.select()
                                 try {
-                                    let content = fs.readFileSync(test_folder + path.sep + test_file);
-                                    console.log("Importing " + test_file)
-                                    codecVS.parse(content, test_folder + path.sep + test_file, false);
-                                    console.log("Exporting " + test_file)
-                                    let reexport_content = codecVS.compile()
-                                    fs.writeFileSync(test_folder + path.sep  + "reexport_" + path.basename(test_file), reexport_content)
+                                    let = Blockbench.read(test_folder + path.sep + test_file, { readtype: "text", errorbox: false}, (files) => {
+                                         console.log("Importing " + test_file)
+                                        codecVS.parse(files[0].content, test_folder + path.sep + test_file, false);
+                                        console.log("Exporting " + test_file)
+                                        let reexport_content = codecVS.compile()
+                                        let reexport_path = test_folder + path.sep + "reexport_" + path.basename(test_file)
+                                        Blockbench.writeFile(reexport_path, {
+                                            content: reexport_content,
+                                            savetype: "text"
+                                        })
+                                    });
                                     //fs.writeFileSync(test_folder + path.sep  + "diff_" + path.basename(test_file), jsonDiff.diffString(JSON.parse(content),JSON.parse(reexport_content), { precision: 3}))
-                                } catch(e) {
+                                } catch (e) {
                                     console.error(e);
                                 }
                                 project.close(true)
