@@ -14,7 +14,7 @@ module.exports = (codec) => new ModelFormat("formatVS", {
     vertex_color_ambient_occlusion: false,
     animated_textures: false, // NOt sure if supported by VS
     bone_rig: true,
-    centered_grid: true,
+    centered_grid: false,
     rotate_cubes: true,
     stretch_cubes: false,
     integer_size: false,
