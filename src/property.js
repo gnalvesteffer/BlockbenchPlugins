@@ -1,5 +1,5 @@
 
-module.exports =  {
+module.exports = {
     windProp: new Property(Face, "vector4", "windMode"),
     textureLocationProp: new Property(Texture, "string", "textureLocation"),
     editor_backDropShapeProp: new Property(ModelProject, "string", "backDropShape", {

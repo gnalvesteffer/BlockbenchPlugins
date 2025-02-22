@@ -7,7 +7,7 @@ module.exports = function (data, locked) {
         let group = {}
         for (let i = 0; i < nodes.length; i++) {
             let e = nodes[i];
-            
+
 
             group = new Group({
                 name: e.name + '_group',
@@ -35,7 +35,7 @@ module.exports = function (data, locked) {
 
                     }
                 }
-                let rotation = [0, 0, 0] 
+                let rotation = [0, 0, 0]
                 let cube = new Cube({
                     name: e.name,
                     from: [e.from[0] + object_space_pos[0], e.from[1] + object_space_pos[1], e.from[2] + object_space_pos[2]],
@@ -63,7 +63,7 @@ module.exports = function (data, locked) {
             if (e.children) {
                 traverseImportTree(group, [e.from[0] + object_space_pos[0], e.from[1] + object_space_pos[1], e.from[2] + object_space_pos[2]], e.children);
             }
-            
+
         }
         return group
     }
@@ -88,9 +88,9 @@ module.exports = function (data, locked) {
         let texture = new Texture({
             name: t,
             path: util.get_texture_location(null, content.textures[t]),
-            
+
         })
-        if(content.textureSizes && content.textureSizes[t]) {
+        if (content.textureSizes && content.textureSizes[t]) {
             texture.uv_width = content.textureSizes[t][0]
             texture.uv_height = content.textureSizes[t][1]
         }
@@ -102,8 +102,8 @@ module.exports = function (data, locked) {
     if (content.editor && content.editor.backDropShape) {
 
         props.editor_backDropShapeProp.merge(Project, content.editor)
-        
-        
+
+
 
     }
 

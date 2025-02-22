@@ -87,12 +87,12 @@ function setParent(child, parent) {
     target_tmp.from = from;
     visit_tree(child, {
         visit_cube: (child, _p) => {
-            child.moveVector(parent.from,null,true)
+            child.moveVector(parent.from, null, true)
         },
         visit_group: (child, _p) => {
             target_tmp.origin = child.origin
-            target_tmp.origin = [target_tmp.origin[0] + target_tmp.from[0],target_tmp.origin[1] + target_tmp.from[1],target_tmp.origin[2] + target_tmp.from[2]]
-            child.origin = [child.origin[0] + parent.from[0],child.origin[1] + parent.from[1],child.origin[2] + parent.from[2]]
+            target_tmp.origin = [target_tmp.origin[0] + target_tmp.from[0], target_tmp.origin[1] + target_tmp.from[1], target_tmp.origin[2] + target_tmp.from[2]]
+            child.origin = [child.origin[0] + parent.from[0], child.origin[1] + parent.from[1], child.origin[2] + parent.from[2]]
 
         }
     })
@@ -102,13 +102,13 @@ function setParent(child, parent) {
 
 function update_children(node) {
     visit_tree(node, {
-        visit_cube(cube,_p) {
+        visit_cube(cube, _p) {
             cube.preview_controller.updateTransform(cube);
             cube.preview_controller.updateGeometry(cube);
             cube.preview_controller.updateFaces(cube);
             cube.preview_controller.updateUV(cube);
         },
-        visit_group(group,_p) {
+        visit_group(group, _p) {
             Canvas.updateView({
                 groups: [group]
             })

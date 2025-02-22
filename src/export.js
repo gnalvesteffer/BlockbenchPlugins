@@ -1,7 +1,7 @@
 const util = require("./util.js")
 const props = require("./property.js")
 
-module.exports = function(options) {
+module.exports = function (options) {
     let traverseExportTree = function (parent, nodes, accu) {
 
         for (let i = 0; i < nodes.length; i++) {
@@ -16,16 +16,16 @@ module.exports = function(options) {
                     from: [g.origin[0] - parent_pos[0], g.origin[1] - parent_pos[1], g.origin[2] - parent_pos[2]],
                     to: [g.origin[0] - parent_pos[0], g.origin[1] - parent_pos[1], g.origin[2] - parent_pos[2]],
                     rotationOrigin: [g.origin[0] - parent_pos[0], g.origin[1] - parent_pos[1], g.origin[2] - parent_pos[2]],
-                    ... (converted_rotation[0] != 0 ) && {rotationX: converted_rotation[0]},
-                    ... (converted_rotation[1] != 0 ) && {rotationY: converted_rotation[1]},
-                    ... (converted_rotation[2] != 0 ) && {rotationZ: converted_rotation[2]},
+                    ... (converted_rotation[0] != 0) && { rotationX: converted_rotation[0] },
+                    ... (converted_rotation[1] != 0) && { rotationY: converted_rotation[1] },
+                    ... (converted_rotation[2] != 0) && { rotationZ: converted_rotation[2] },
                     children: []
                 }
 
                 //Why is there no better way to do this...
                 let tmp = {}
-                props.stepParentProp.copy(g,tmp);
-                if(tmp.stepParentName) {
+                props.stepParentProp.copy(g, tmp);
+                if (tmp.stepParentName) {
                     e.stepParentName = tmp.stepParentName
                 }
 
@@ -40,11 +40,11 @@ module.exports = function(options) {
                         reduced_faces[direction] = {};
                         if (c.faces[direction].texture) {
                             let texture = Texture.all.find((elem, _x, _y) => c.faces[direction].texture.toString() == elem.uuid.toString())
-                            let texture_name = texture? texture.name : "unknown";
+                            let texture_name = texture ? texture.name : "unknown";
                             reduced_faces[direction].texture = "#" + texture_name;
                         }
                         reduced_faces[direction].uv = c.faces[direction].uv;
-                        if(c.faces[direction].rotation != 0) {
+                        if (c.faces[direction].rotation != 0) {
                             reduced_faces[direction].rotation = c.faces[direction].rotation;
                         }
                         props.windProp.copy(c.faces[direction], reduced_faces[direction]);
@@ -58,9 +58,9 @@ module.exports = function(options) {
                     to: [c.to[0] - parent_pos[0], c.to[1] - parent_pos[1], c.to[2] - parent_pos[2]],
                     uv: c.uv || undefined,
                     faces: reduced_faces,
-                    ... (converted_rotation[0] != 0 ) && {rotationX: converted_rotation[0]},
-                    ... (converted_rotation[1] != 0 ) && {rotationY: converted_rotation[1]},
-                    ... (converted_rotation[2] != 0 ) && {rotationZ: converted_rotation[2]},
+                    ... (converted_rotation[0] != 0) && { rotationX: converted_rotation[0] },
+                    ... (converted_rotation[1] != 0) && { rotationY: converted_rotation[1] },
+                    ... (converted_rotation[2] != 0) && { rotationZ: converted_rotation[2] },
                 }
                 accu.push(e);
             }
@@ -77,13 +77,13 @@ module.exports = function(options) {
         textures: {},
         elements: []
     }
-    
 
-    for (var i = 0 ; i < Texture.all.length ; i++) {
+
+    for (var i = 0; i < Texture.all.length; i++) {
         let t = Texture.all[i]
         console.log(t.getUVWidth())
         if (t.getUVWidth() && t.getUVHeight()) {
-            
+
             data.textureSizes[t.name] = [Texture.all[i].uv_width, Texture.all[i].uv_height];
         }
     }
@@ -121,7 +121,7 @@ module.exports = function(options) {
 
     let tmp = {}
     props.editor_backDropShapeProp.copy(Project, tmp);
-    if(tmp.backDropShape) {
+    if (tmp.backDropShape) {
         data.editor.backDropShape = tmp.backDropShape
     }
     return autoStringify(data)

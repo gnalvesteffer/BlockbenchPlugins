@@ -23,8 +23,6 @@ Plugin.register('vs_plugin', {
     version: '1.0.0',
     variant: 'desktop',
 
-
-
     onload() {
         //Init additional Attribute Properties
         let game_path_setting = new Setting("game_path", {
@@ -92,12 +90,12 @@ Plugin.register('vs_plugin', {
             for (var g of Group.all) {
                 let p = {}
                 props.stepParentProp.copy(g, p)
-                if(p.stepParentName) {
+                if (p.stepParentName) {
                     let spg = Group.all.find(g => g.name === (p.stepParentName + "_group"))
                     let sp = spg.children[0]
                     console.log(sp)
-                    
-                    util.setParent(g,sp)
+
+                    util.setParent(g, sp)
                     g.addTo(spg);
                 }
             }
@@ -162,8 +160,8 @@ Plugin.register('vs_plugin', {
                                 let project = new ModelProject({ format: formatVS })
                                 project.select()
                                 try {
-                                    let = Blockbench.read(test_folder + path.sep + test_file, { readtype: "text", errorbox: false}, (files) => {
-                                         console.log("Importing " + test_file)
+                                    let = Blockbench.read(test_folder + path.sep + test_file, { readtype: "text", errorbox: false }, (files) => {
+                                        console.log("Importing " + test_file)
                                         codecVS.parse(files[0].content, test_folder + path.sep + test_file, false);
                                         console.log("Exporting " + test_file)
                                         let reexport_content = codecVS.compile()
