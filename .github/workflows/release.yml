@@ -29,7 +29,7 @@ jobs:
       id: version
       with:
         scheme: semver
-        increment: patch
+        increment: minor
     - name: release
       uses: actions/create-release@v1
       id: create_release
