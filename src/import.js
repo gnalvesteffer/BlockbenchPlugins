@@ -35,7 +35,7 @@ module.exports = function (data, locked) {
 
                     }
                 }
-                let rotation = [0, 0, 0] //: xyz_to_zyx([e.rotationX || 0, e.rotationY || 0, e.rotationZ || 0]);
+                let rotation = [0, 0, 0] 
                 let cube = new Cube({
                     name: e.name,
                     from: [e.from[0] + object_space_pos[0], e.from[1] + object_space_pos[1], e.from[2] + object_space_pos[2]],

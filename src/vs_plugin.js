@@ -86,14 +86,19 @@ Plugin.register('vs_plugin', {
             }
         }
 
+
+
         function resolveStepparentTransforms() {
             for (var g of Group.all) {
                 let p = {}
                 props.stepParentProp.copy(g, p)
                 if(p.stepParentName) {
-                    let sp = Group.all.find(g => g.name === (p.stepParentName + "_group")).children[0];
+                    let spg = Group.all.find(g => g.name === (p.stepParentName + "_group"))
+                    let sp = spg.children[0]
                     console.log(sp)
-                    g.children[0].moveVector(sp.from,0,true)
+                    
+                    util.setParent(g,sp)
+                    g.addTo(spg);
                 }
             }
         }
