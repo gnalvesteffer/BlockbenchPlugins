@@ -81,17 +81,12 @@ function copyOrigin(source, target) {
 }
 
 function setParent(child, parent) {
-    let target_tmp = {}
-    let from = [parent.from[0], parent.from[1], parent.from[2]]
-    console.log(from)
-    target_tmp.from = from;
     visit_tree(child, {
         visit_cube: (child, _p) => {
             child.moveVector(parent.from, null, true)
+            child.origin = [child.origin[0] + parent.from[0], child.origin[1] + parent.from[1], child.origin[2] + parent.from[2]]
         },
         visit_group: (child, _p) => {
-            target_tmp.origin = child.origin
-            target_tmp.origin = [target_tmp.origin[0] + target_tmp.from[0], target_tmp.origin[1] + target_tmp.from[1], target_tmp.origin[2] + target_tmp.from[2]]
             child.origin = [child.origin[0] + parent.from[0], child.origin[1] + parent.from[1], child.origin[2] + parent.from[2]]
 
         }
