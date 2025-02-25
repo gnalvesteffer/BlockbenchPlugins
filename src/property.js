@@ -6,4 +6,6 @@ module.exports = {
         exposed: false,
     }),
     stepParentProp: new Property(Group, "string", "stepParentName"),
+    hologramProp: new Property(Group, "string", "hologram"),
+    hologramProp: new Property(Cube, "string", "hologram"),
 }

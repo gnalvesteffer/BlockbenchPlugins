@@ -95,6 +95,21 @@ function setParent(child, parent) {
     Canvas.updateAllBones()
 }
 
+function removeParent(child, parent) {
+    visit_tree(child, {
+        visit_cube: (child, _p) => {
+            child.moveVector([-parent.from[0], -parent.from[1],-parent.from[2]], null, true)
+            child.origin = [child.origin[0] - parent.from[0], child.origin[1] - parent.from[1], child.origin[2] - parent.from[2]]
+        },
+        visit_group: (child, _p) => {
+            child.origin = [child.origin[0] - parent.from[0], child.origin[1] - parent.from[1], child.origin[2] - parent.from[2]]
+
+        }
+    })
+    Canvas.updateAllPositions()
+    Canvas.updateAllBones()
+}
+
 function update_children(node) {
     visit_tree(node, {
         visit_cube(cube, _p) {
@@ -119,4 +134,5 @@ module.exports = {
     get_shape_location,
     visit_tree,
     setParent,
+    removeParent,
 }

@@ -14,6 +14,7 @@ let exportAction
 let importAction
 let reExportAction
 let debugAction
+let onGroupAdd
 
 Plugin.register('vs_plugin', {
     title: 'Vintage Story Format Support',
@@ -52,6 +53,21 @@ Plugin.register('vs_plugin', {
             }
         })
 
+        onGroupAdd = function(_group) {
+
+            let group = Group.first_selected
+            let parent = group.parent
+            console.log(group)
+            console.log(parent)
+            if(parent.hologram) {
+
+                group.stepParentName = parent.name.substring(0,parent.name.length - 6)
+                console.log(group.stepParentName)
+            }
+        }
+
+        Blockbench.on('add_group',onGroupAdd);
+
         let codecVS = new Codec("codecVS", {
             name: "Vintage Story Codec",
             extension: "json",
@@ -61,6 +77,7 @@ Plugin.register('vs_plugin', {
                 type: 'text',
             },
             compile(options) {
+                resetStepparentTransforms()
                 return ex(options)
             },
             parse(data, file_path, add) {
@@ -92,11 +109,30 @@ Plugin.register('vs_plugin', {
                 props.stepParentProp.copy(g, p)
                 if (p.stepParentName) {
                     let spg = Group.all.find(g => g.name === (p.stepParentName + "_group"))
-                    let sp = spg.children[0]
-                    console.log(sp)
+                    if (spg) {
+                        let sp = spg.children[0]
+                        console.log(sp)
 
-                    util.setParent(g, sp)
-                    g.addTo(spg);
+                        util.setParent(g, sp)
+                        g.addTo(spg);
+                    }
+                }
+            }
+        }
+
+        function resetStepparentTransforms() {
+            for (var g of Group.all) {
+                let p = {}
+                props.stepParentProp.copy(g, p)
+                if (!g.hologram) {
+                    let spg = Group.all.find(g => g.name === (p.stepParentName + "_group"))
+                    if (spg) {
+                        let sp = spg.children[0]
+                        console.log(sp)
+
+                        util.removeParent(g, sp)
+                        g.addTo(null);
+                    }
                 }
             }
         }
@@ -200,5 +236,6 @@ Plugin.register('vs_plugin', {
         importAction.delete();
         reExportAction.delete();
         debugAction.delete()
+        Blockbench.removeListener('add_group', onGroupAdd)
     }
 });

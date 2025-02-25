@@ -1,7 +1,7 @@
 const util = require("./util.js")
 const props = require("./property.js")
 
-module.exports = function (data, locked) {
+module.exports = function (data, path, asHologram) {
 
     let traverseImportTree = function (parent, object_space_pos, nodes) {
         let group = {}
@@ -15,6 +15,10 @@ module.exports = function (data, locked) {
                 origin: e.rotationOrigin ? [e.rotationOrigin[0] + object_space_pos[0], e.rotationOrigin[1] + object_space_pos[1], e.rotationOrigin[2] + object_space_pos[2]] : object_space_pos,
                 rotation: util.xyz_to_zyx([e.rotationX || 0, e.rotationY || 0, e.rotationZ || 0]),
             })
+
+            if(asHologram) {
+                group.hologram = path;
+            }
 
             if (e.stepParentName) {
                 props.stepParentProp.merge(group, e);
@@ -47,6 +51,10 @@ module.exports = function (data, locked) {
                     faces: reduced_faces,
                     rotation: rotation,
                 })
+
+                if(asHologram) {
+                    cube.hologram = path;
+                }
 
                 //if (e.children) {
                 cube.addTo(group);

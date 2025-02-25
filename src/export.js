@@ -29,8 +29,13 @@ module.exports = function (options) {
                     e.stepParentName = tmp.stepParentName
                 }
 
-                accu.push(e);
-                traverseExportTree(g, g.children, e.children);
+                if(!g.hologram) {
+                    accu.push(e);
+                    traverseExportTree(g, g.children, e.children);
+                } else {
+                    traverseExportTree(g, g.children, accu);
+                }
+
             } else { // Node is a Cube
                 let c = n;
                 let reduced_faces = {}
@@ -62,7 +67,10 @@ module.exports = function (options) {
                     ... (converted_rotation[1] != 0) && { rotationY: converted_rotation[1] },
                     ... (converted_rotation[2] != 0) && { rotationZ: converted_rotation[2] },
                 }
-                accu.push(e);
+                if(!c.hologram){
+                    accu.push(e);
+                }
+
             }
         }
 
