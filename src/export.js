@@ -22,11 +22,8 @@ module.exports = function (options) {
                     children: []
                 }
 
-                //Why is there no better way to do this...
-                let tmp = {}
-                props.stepParentProp.copy(g, tmp);
-                if (tmp.stepParentName) {
-                    e.stepParentName = tmp.stepParentName
+                if(g.stepParentName) {
+                    e.stepParentName = g.stepParentName
                 }
 
                 if(!g.hologram) {
@@ -127,10 +124,19 @@ module.exports = function (options) {
         //path.posix.relative('C:/Users/Lukas/AppData/Roaming/Vintagestory/assets/survival/textures/', t.path).split('.').slice(0, -1).join('.');
     }
 
-    let tmp = {}
-    props.editor_backDropShapeProp.copy(Project, tmp);
-    if (tmp.backDropShape) {
-        data.editor.backDropShape = tmp.backDropShape
+
+    if(Project.backDropShape) {
+        data.editor.backDropShape = Project.backDropShape
     }
+    if(Project.allAngles) {
+        data.editor.allAngles = Project.allAngles
+    }
+    if(Project.entityTextureMode) {
+        data.editor.entityTextureMode = Project.entityTextureMode
+    }
+    if(Project.collapsedPaths) {
+        data.editor.collapsedPaths = Project.collapsedPaths
+    }
+
     return autoStringify(data)
 }

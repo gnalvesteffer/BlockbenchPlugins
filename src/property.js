@@ -5,7 +5,16 @@ module.exports = {
     editor_backDropShapeProp: new Property(ModelProject, "string", "backDropShape", {
         exposed: false,
     }),
+    editor_allAnglesProp: new Property(ModelProject, "boolean", "allAngles", {
+        exposed: false,
+    }),
+    editor_entityTextureModeProp: new Property(ModelProject, "boolean", "entityTextureMode", {
+        exposed: false,
+    }),
+    editor_collapsedPathsProp: new Property(ModelProject, "string", "collapsedPaths", {
+        exposed: false,
+    }),
     stepParentProp: new Property(Group, "string", "stepParentName"),
-    hologramProp: new Property(Group, "string", "hologram"),
-    hologramProp: new Property(Cube, "string", "hologram"),
+    hologramGroupProp: new Property(Group, "string", "hologram"),
+    hologramCubeProp: new Property(Cube, "string", "hologram"),
 }

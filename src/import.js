@@ -107,12 +107,21 @@ module.exports = function (data, path, asHologram) {
         props.textureLocationProp.merge(texture, tmp);
     }
 
-    if (content.editor && content.editor.backDropShape) {
+    if (content.editor) {
+        if(content.editor.backDropShape) {
+            props.editor_backDropShapeProp.merge(Project, content.editor)            
+        }
+        console.log(content.editor)
+        if(content.editor.allAngles) {
+            props.editor_allAnglesProp.merge(Project, content.editor)
+        }
+        if(content.editor.entityTextureMode) {
+            props.editor_entityTextureModeProp.merge(Project, content.editor)
+        }
 
-        props.editor_backDropShapeProp.merge(Project, content.editor)
-
-
-
+        if(content.editor.collapsedPaths) {
+            props.editor_collapsedPathsProp.merge(Project, content.editor)
+        }
     }
 
 
