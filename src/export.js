@@ -58,6 +58,7 @@ module.exports = function (options) {
                     name: c.name,
                     from: util.vector_sub(c.from, parent_pos),
                     to: util.vector_sub(c.to, parent_pos),
+                    rotationOrigin: util.vector_sub(c.origin, parent_pos),
                     uv: c.uv || undefined,
                     faces: reduced_faces,
                     ... (converted_rotation[0] != 0) && { rotationX: converted_rotation[0] },
