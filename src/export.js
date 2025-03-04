@@ -13,9 +13,9 @@ module.exports = function (options) {
                 let converted_rotation = util.zyx_to_xyz(g.rotation);
                 let e = {
                     name: g.name,
-                    from: [g.origin[0] - parent_pos[0], g.origin[1] - parent_pos[1], g.origin[2] - parent_pos[2]],
-                    to: [g.origin[0] - parent_pos[0], g.origin[1] - parent_pos[1], g.origin[2] - parent_pos[2]],
-                    rotationOrigin: [g.origin[0] - parent_pos[0], g.origin[1] - parent_pos[1], g.origin[2] - parent_pos[2]],
+                    from: util.vector_sub(g.origin, parent_pos),
+                    to: util.vector_sub(g.origin, parent_pos),
+                    rotationOrigin: util.vector_sub(g.origin, parent_pos),
                     ... (converted_rotation[0] != 0) && { rotationX: converted_rotation[0] },
                     ... (converted_rotation[1] != 0) && { rotationY: converted_rotation[1] },
                     ... (converted_rotation[2] != 0) && { rotationZ: converted_rotation[2] },
@@ -56,8 +56,8 @@ module.exports = function (options) {
                 let converted_rotation = util.zyx_to_xyz(c.rotation);
                 let e = {
                     name: c.name,
-                    from: [c.from[0] - parent_pos[0], c.from[1] - parent_pos[1], c.from[2] - parent_pos[2]],
-                    to: [c.to[0] - parent_pos[0], c.to[1] - parent_pos[1], c.to[2] - parent_pos[2]],
+                    from: util.vector_sub(c.from, parent_pos),
+                    to: util.vector_sub(c.to, parent_pos),
                     uv: c.uv || undefined,
                     faces: reduced_faces,
                     ... (converted_rotation[0] != 0) && { rotationX: converted_rotation[0] },
@@ -86,7 +86,6 @@ module.exports = function (options) {
 
     for (var i = 0; i < Texture.all.length; i++) {
         let t = Texture.all[i]
-        console.log(t.getUVWidth())
         if (t.getUVWidth() && t.getUVHeight()) {
 
             data.textureSizes[t.name] = [Texture.all[i].uv_width, Texture.all[i].uv_height];

@@ -12,7 +12,7 @@ module.exports = function (data, path, asHologram) {
             group = new Group({
                 name: e.name + '_group',
                 //stepParentName: e.stepParentName,
-                origin: e.rotationOrigin ? [e.rotationOrigin[0] + object_space_pos[0], e.rotationOrigin[1] + object_space_pos[1], e.rotationOrigin[2] + object_space_pos[2]] : object_space_pos,
+                origin: e.rotationOrigin ? util.vector_add(e.rotationOrigin, object_space_pos) : object_space_pos,
                 rotation: util.xyz_to_zyx([e.rotationX || 0, e.rotationY || 0, e.rotationZ || 0]),
             })
 
@@ -37,20 +37,35 @@ module.exports = function (data, path, asHologram) {
                         let tex = Texture.all.find((elem, i, arr) => elem.name == texture_name);
                         reduced_faces[direction] = { texture: tex, uv: e.faces[direction].uv, rotation: e.faces[direction].rotation };
 
-                    }
+                    } 
+                    // This gets ignored by Blockbench even though the API says it should work...
+                    // else {
+                    //     console.log("Disable face")
+                    //     reduced_faces[direction] = { enabled: false}
+                    // }
                 }
                 let rotation = [0, 0, 0]
                 let cube = new Cube({
                     name: e.name,
-                    from: [e.from[0] + object_space_pos[0], e.from[1] + object_space_pos[1], e.from[2] + object_space_pos[2]],
-                    to: [e.to[0] + object_space_pos[0], e.to[1] + object_space_pos[1], e.to[2] + object_space_pos[2]],
+                    from: util.vector_add(e.from, object_space_pos),
+                    to: util.vector_add(e.to, object_space_pos),
                     uv_offset: e.uv || undefined,
-                    origin: e.rotationOrigin ? [e.rotationOrigin[0] + object_space_pos[0], e.rotationOrigin[1] + object_space_pos[1], e.rotationOrigin[2] + object_space_pos[2]] : object_space_pos,
+                    origin: e.rotationOrigin ? util.vector_add(e.rotationOrigin, object_space_pos) : object_space_pos,
                     visibility: true,
                     shade: true,
                     faces: reduced_faces,
                     rotation: rotation,
                 })
+                
+                // Hacky way to disable disabled faces which also doesn't work =/
+                // for (const direction of ['north', 'east', 'south', 'west', 'up', 'down']) {
+                //     if (!e.faces[direction]) {
+                //         console.log("Disable face")
+                //         //console.log(cube.faces[direction])
+                //         cube.faces[direction].enabled = false
+                //         console.log(cube.faces[direction]) // WTH?!
+                //     } 
+                // }
 
                 if(asHologram) {
                     cube.hologram = path;
@@ -69,7 +84,7 @@ module.exports = function (data, path, asHologram) {
                 }
             }
             if (e.children) {
-                traverseImportTree(group, [e.from[0] + object_space_pos[0], e.from[1] + object_space_pos[1], e.from[2] + object_space_pos[2]], e.children);
+                traverseImportTree(group, util.vector_add(e.from, object_space_pos), e.children);
             }
 
         }
@@ -111,7 +126,6 @@ module.exports = function (data, path, asHologram) {
         if(content.editor.backDropShape) {
             props.editor_backDropShapeProp.merge(Project, content.editor)            
         }
-        console.log(content.editor)
         if(content.editor.allAngles) {
             props.editor_allAnglesProp.merge(Project, content.editor)
         }

@@ -127,6 +127,31 @@ function update_children(node) {
 
 }
 
+function vector_add(a, b) {
+    let c = []
+    for(let i = 0 ; i < a.length ; i++) {
+        c[i] = a[i] + b[i]
+    }
+    return c
+}
+
+function vector_inv(a) {
+    let c = []
+    for(let i = 0 ; i < a.length ; i++) {
+        c[i] = - a[i]
+    }
+   
+    return c
+}
+
+function vector_sub(a,b) {
+    let c = []
+    for(let i = 0 ; i < a.length ; i++) {
+        c[i] = a[i] - b[i]
+    }
+    return c
+}
+
 module.exports = {
     xyz_to_zyx,
     zyx_to_xyz,
@@ -135,4 +160,7 @@ module.exports = {
     visit_tree,
     setParent,
     removeParent,
+    vector_add,
+    vector_sub,
+    vector_inv,
 }
