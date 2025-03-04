@@ -21,7 +21,7 @@ Plugin.register('vs_plugin', {
     icon: 'icon',
     author: 'Darkluke1111',
     description: 'Adds the Vintage Story format export/import options.',
-    version: '1.0.0',
+    version: '0.7.0',
     variant: 'desktop',
 
     onload() {
