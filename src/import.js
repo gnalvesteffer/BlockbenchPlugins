@@ -8,10 +8,8 @@ module.exports = function (data, path, asHologram) {
         for (let i = 0; i < nodes.length; i++) {
             let e = nodes[i];
 
-
             group = new Group({
-                name: e.name + '_group',
-                //stepParentName: e.stepParentName,
+                name: e.name.endsWith('_group') ? e.name : e.name + '_group',
                 origin: e.rotationOrigin ? util.vector_add(e.rotationOrigin, object_space_pos) : object_space_pos,
                 rotation: util.xyz_to_zyx([e.rotationX || 0, e.rotationY || 0, e.rotationZ || 0]),
             })
