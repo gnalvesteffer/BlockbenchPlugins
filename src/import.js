@@ -4,45 +4,20 @@ const props = require("./property.js")
 module.exports = function (data, path, asHologram) {
 
     let traverseImportTree = function (parent, object_space_pos, nodes) {
-        let group = {}
         for (let i = 0; i < nodes.length; i++) {
             let e = nodes[i];
-
-            group = new Group({
-                name: e.name.endsWith('_group') ? e.name : e.name + '_group',
-                origin: e.rotationOrigin ? util.vector_add(e.rotationOrigin, object_space_pos) : object_space_pos,
-                rotation: util.xyz_to_zyx([e.rotationX || 0, e.rotationY || 0, e.rotationZ || 0]),
-            })
-
-            if(asHologram) {
-                group.hologram = path;
-            }
-
-            if (e.stepParentName) {
-                props.stepParentProp.merge(group, e);
-            }
-
-
-            group.addTo(parent).init();
-            //group.extend({locked: locked})
-
-            if (e.faces && (Object.keys(e.faces).length > 0)) {
-
-                let reduced_faces = {}
+    
+            // Check if the node represents a single cube with no children
+            if (e.faces && Object.keys(e.faces).length > 0 && !e.children) {
+                // Create a cube directly without a group
+                let reduced_faces = {};
                 for (const direction of ['north', 'east', 'south', 'west', 'up', 'down']) {
                     if (e.faces[direction]) {
                         let texture_name = e.faces[direction].texture ? e.faces[direction].texture.substring(1) : null;
-                        let tex = Texture.all.find((elem, i, arr) => elem.name == texture_name);
+                        let tex = Texture.all.find((elem) => elem.name == texture_name);
                         reduced_faces[direction] = { texture: tex, uv: e.faces[direction].uv, rotation: e.faces[direction].rotation };
-
-                    } 
-                    // This gets ignored by Blockbench even though the API says it should work...
-                    // else {
-                    //     console.log("Disable face")
-                    //     reduced_faces[direction] = { enabled: false}
-                    // }
+                    }
                 }
-                let rotation = [0, 0, 0]
                 let cube = new Cube({
                     name: e.name,
                     from: util.vector_add(e.from, object_space_pos),
@@ -52,42 +27,82 @@ module.exports = function (data, path, asHologram) {
                     visibility: true,
                     shade: true,
                     faces: reduced_faces,
-                    rotation: rotation,
-                })
-                
-                // Hacky way to disable disabled faces which also doesn't work =/
-                // for (const direction of ['north', 'east', 'south', 'west', 'up', 'down']) {
-                //     if (!e.faces[direction]) {
-                //         console.log("Disable face")
-                //         //console.log(cube.faces[direction])
-                //         cube.faces[direction].enabled = false
-                //         console.log(cube.faces[direction]) // WTH?!
-                //     } 
-                // }
-
-                if(asHologram) {
+                    rotation: [0, 0, 0],
+                });
+    
+                if (asHologram) {
                     cube.hologram = path;
                 }
-
-                //if (e.children) {
-                cube.addTo(group);
-                //} else {
-                //    cube.addTo(parent);
-                //}
-                cube.init();
+    
+                // Add cube directly to the parent
+                cube.addTo(parent).init();
+    
+                // Apply windMode properties
                 for (const direction of ['north', 'east', 'south', 'west', 'up', 'down']) {
                     if (e.faces[direction] && e.faces[direction].windMode) {
                         props.windProp.merge(cube.faces[direction], e.faces[direction]);
                     }
                 }
+            } else {
+                // Create a group for nodes with children or other properties requiring a group
+                let group = new Group({
+                    name: e.name.endsWith('_group') ? e.name : e.name + '_group',
+                    origin: e.rotationOrigin ? util.vector_add(e.rotationOrigin, object_space_pos) : object_space_pos,
+                    rotation: util.xyz_to_zyx([e.rotationX || 0, e.rotationY || 0, e.rotationZ || 0]),
+                });
+    
+                if (asHologram) {
+                    group.hologram = path;
+                }
+    
+                if (e.stepParentName) {
+                    props.stepParentProp.merge(group, e);
+                }
+    
+                group.addTo(parent).init();
+    
+                // Handle cubes within the group
+                if (e.faces && Object.keys(e.faces).length > 0) {
+                    let reduced_faces = {};
+                    for (const direction of ['north', 'east', 'south', 'west', 'up', 'down']) {
+                        if (e.faces[direction]) {
+                            let texture_name = e.faces[direction].texture ? e.faces[direction].texture.substring(1) : null;
+                            let tex = Texture.all.find((elem) => elem.name == texture_name);
+                            reduced_faces[direction] = { texture: tex, uv: e.faces[direction].uv, rotation: e.faces[direction].rotation };
+                        }
+                    }
+                    let cube = new Cube({
+                        name: e.name,
+                        from: util.vector_add(e.from, object_space_pos),
+                        to: util.vector_add(e.to, object_space_pos),
+                        uv_offset: e.uv || undefined,
+                        origin: e.rotationOrigin ? util.vector_add(e.rotationOrigin, object_space_pos) : object_space_pos,
+                        visibility: true,
+                        shade: true,
+                        faces: reduced_faces,
+                        rotation: [0, 0, 0],
+                    });
+    
+                    if (asHologram) {
+                        cube.hologram = path;
+                    }
+    
+                    cube.addTo(group).init();
+    
+                    for (const direction of ['north', 'east', 'south', 'west', 'up', 'down']) {
+                        if (e.faces[direction] && e.faces[direction].windMode) {
+                            props.windProp.merge(cube.faces[direction], e.faces[direction]);
+                        }
+                    }
+                }
+    
+                // Recursively process children
+                if (e.children) {
+                    traverseImportTree(group, util.vector_add(e.from, object_space_pos), e.children);
+                }
             }
-            if (e.children) {
-                traverseImportTree(group, util.vector_add(e.from, object_space_pos), e.children);
-            }
-
         }
-        return group
-    }
+    };
 
     let content = autoParseJSON(data)
 
