@@ -6,8 +6,8 @@ module.exports = function (data, path, asHologram) {
     let traverseImportTree = function (parent, object_space_pos, nodes) {
         for (let i = 0; i < nodes.length; i++) {
             let e = nodes[i];
-    
-            // Check if the node represents a single cube with no children
+
+            // Check if the node is a single cube with no children
             if (e.faces && Object.keys(e.faces).length > 0 && !e.children) {
                 // Create a cube directly without a group
                 let reduced_faces = {};
@@ -27,40 +27,38 @@ module.exports = function (data, path, asHologram) {
                     visibility: true,
                     shade: true,
                     faces: reduced_faces,
-                    rotation: [0, 0, 0],
+                    rotation: util.xyz_to_zyx([e.rotationX || 0, e.rotationY || 0, e.rotationZ || 0]), // Apply rotations to cube if any
                 });
-    
+
                 if (asHologram) {
                     cube.hologram = path;
                 }
-    
-                // Add cube directly to the parent
+
                 cube.addTo(parent).init();
-    
-                // Apply windMode properties
+
                 for (const direction of ['north', 'east', 'south', 'west', 'up', 'down']) {
                     if (e.faces[direction] && e.faces[direction].windMode) {
                         props.windProp.merge(cube.faces[direction], e.faces[direction]);
                     }
                 }
             } else {
-                // Create a group for nodes with children or other properties requiring a group
+                // Create a group for nodes with children or other properties
                 let group = new Group({
-                    name: e.name.endsWith('_group') ? e.name : e.name + '_group',
+                    name: e.name, // Use name as-is, no _group suffix
                     origin: e.rotationOrigin ? util.vector_add(e.rotationOrigin, object_space_pos) : object_space_pos,
                     rotation: util.xyz_to_zyx([e.rotationX || 0, e.rotationY || 0, e.rotationZ || 0]),
                 });
-    
+
                 if (asHologram) {
                     group.hologram = path;
                 }
-    
+
                 if (e.stepParentName) {
                     props.stepParentProp.merge(group, e);
                 }
-    
+
                 group.addTo(parent).init();
-    
+
                 // Handle cubes within the group
                 if (e.faces && Object.keys(e.faces).length > 0) {
                     let reduced_faces = {};
@@ -82,27 +80,28 @@ module.exports = function (data, path, asHologram) {
                         faces: reduced_faces,
                         rotation: [0, 0, 0],
                     });
-    
+
                     if (asHologram) {
                         cube.hologram = path;
                     }
-    
+
                     cube.addTo(group).init();
-    
+
                     for (const direction of ['north', 'east', 'south', 'west', 'up', 'down']) {
                         if (e.faces[direction] && e.faces[direction].windMode) {
                             props.windProp.merge(cube.faces[direction], e.faces[direction]);
                         }
                     }
                 }
-    
+
                 // Recursively process children
                 if (e.children) {
                     traverseImportTree(group, util.vector_add(e.from, object_space_pos), e.children);
                 }
             }
         }
-    };
+        // No return value to avoid implying a root group
+    }
 
     let content = autoParseJSON(data)
 
@@ -113,22 +112,15 @@ module.exports = function (data, path, asHologram) {
         Project.texture_width = content.textureWidth;
     }
 
-
-    //Texture
+    // Texture
     for (var t in content.textures) {
-        // console.log(path.posix.format({
-        //     root: asset_path,
-        //     name: content.textures[t],
-        //     ext: '.png',
-        // }))
         let texture = new Texture({
             name: t,
             path: util.get_texture_location(null, content.textures[t]),
-
-        })
+        });
         if (content.textureSizes && content.textureSizes[t]) {
-            texture.uv_width = content.textureSizes[t][0]
-            texture.uv_height = content.textureSizes[t][1]
+            texture.uv_width = content.textureSizes[t][0];
+            texture.uv_height = content.textureSizes[t][1];
         }
         texture.add().load();
         let tmp = { textureLocation: content.textures[t] };
@@ -136,25 +128,20 @@ module.exports = function (data, path, asHologram) {
     }
 
     if (content.editor) {
-        if(content.editor.backDropShape) {
-            props.editor_backDropShapeProp.merge(Project, content.editor)            
+        if (content.editor.backDropShape) {
+            props.editor_backDropShapeProp.merge(Project, content.editor);
         }
-        if(content.editor.allAngles) {
-            props.editor_allAnglesProp.merge(Project, content.editor)
+        if (content.editor.allAngles) {
+            props.editor_allAnglesProp.merge(Project, content.editor);
         }
-        if(content.editor.entityTextureMode) {
-            props.editor_entityTextureModeProp.merge(Project, content.editor)
+        if (content.editor.entityTextureMode) {
+            props.editor_entityTextureModeProp.merge(Project, content.editor);
         }
-
-        if(content.editor.collapsedPaths) {
-            props.editor_collapsedPathsProp.merge(Project, content.editor)
+        if (content.editor.collapsedPaths) {
+            props.editor_collapsedPathsProp.merge(Project, content.editor);
         }
     }
 
-
-
-    //Cubes
-    let group = traverseImportTree(null, [0, 0, 0], content.elements)
-    //group.extend({locked: locked});
-
+    // Cubes
+    traverseImportTree(null, [0, 0, 0], content.elements);
 }
